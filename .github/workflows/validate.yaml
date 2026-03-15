@@ -1,0 +1,14 @@
+name: Pull Request validation
+
+on: [pull_request]
+
+
+jobs:
+  vibecheck-contracts-ci:
+    name: Run vibecheck-contracts validation
+    uses: ./.github/workflows/vibecheck-contracts-ci.yaml
+
+  vibecheck-frontend-ci:
+    name: Run vibecheck-frontend validation
+    uses: ./.github/workflows/vibecheck-frontend-ci.yaml
+

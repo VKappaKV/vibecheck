@@ -1,0 +1,10 @@
+# Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
+_commit: 2.1.8
+_src_path: gh:algorandfoundation/algokit-fullstack-template
+author_email: jacopo851@gmail.com
+author_name: VKappaKV
+cloud_provider: none
+contract_name: vibecheck
+preset_name: production
+project_name: vibecheck
+

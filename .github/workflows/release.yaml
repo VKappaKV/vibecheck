@@ -1,0 +1,38 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+      - '.vscode/**'
+      - '.idea/**'
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  vibecheck-contracts-validate:
+    name: Run vibecheck-contracts release
+    secrets: inherit
+    uses: ./.github/workflows/vibecheck-contracts-ci.yaml
+
+  vibecheck-contracts-release:
+    name: Run vibecheck-contracts release
+    secrets: inherit
+    uses: ./.github/workflows/vibecheck-contracts-cd.yaml
+    needs: vibecheck-contracts-validate
+
+  vibecheck-frontend-validate:
+    name: Run vibecheck-frontend release
+    secrets: inherit
+    uses: ./.github/workflows/vibecheck-frontend-ci.yaml
+
+  vibecheck-frontend-release:
+    name: Run vibecheck-frontend release
+    secrets: inherit
+    uses: ./.github/workflows/vibecheck-frontend-cd.yaml
+    needs: vibecheck-frontend-validate
