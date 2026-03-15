@@ -1,4 +1,4 @@
-import { AlgorandClient } from '@algorandfoundation/algokit-utils'
+import { AlgorandClient, microAlgo } from '@algorandfoundation/algokit-utils'
 import { VibecheckFactory } from '../artifacts/vibecheck/VibecheckClient'
 
 // Below is a showcase of various deployment options you can use in TypeScript Client
@@ -21,9 +21,19 @@ export async function deploy() {
       sender: deployer.addr,
       receiver: appClient.appAddress,
     })
+
+    const payMbr = await algorand.createTransaction.payment({
+      sender: deployer.addr,
+      receiver: appClient.appAddress,
+      amount: microAlgo(300_000),
+    })
+
+    await appClient.send.init({
+      args: { payMbr },
+    })
   }
 
-  const method = 'hello'  
+  const method = 'hello'
   const response = await appClient.send.hello({
     args: { name: 'world' },
   })

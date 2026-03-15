@@ -1,0 +1,1051 @@
+#pragma version 11
+#pragma typetrack false
+
+// @algorandfoundation/algorand-typescript/arc4/index.d.ts::Contract.approvalProgram() -> uint64:
+main:
+    intcblock 1 0 32 8
+    bytecblock "trusted_app" "trusted_asa" "adjacency_list" 0x0000 0x151f7c75 0x0000000000000000
+    // smart_contracts/vibecheck/contract.algo.ts:22
+    // export class Vibecheck extends Contract {
+    txn NumAppArgs
+    bz main___algots__.defaultCreate@14
+    txn OnCompletion
+    !
+    assert // OnCompletion must be NoOp
+    txn ApplicationID
+    assert
+    pushbytess 0x02bece11 0xa1fb506b 0x87a83dfc 0xef3a1231 0x5b980022 0xce5c0863 0x9c54527d // method "hello(string)string", method "init(pay)void", method "add(uint64,uint64,address)void", method "remove(uint64,uint64,address)void", method "getTrustedApp(address)uint64[]", method "getTrustedASA(address)uint64[]", method "getAdjacencyList(address)address[]"
+    txna ApplicationArgs 0
+    match hello init add remove getTrustedApp getTrustedASA getAdjacencyList
+    err
+
+main___algots__.defaultCreate@14:
+    // smart_contracts/vibecheck/contract.algo.ts:22
+    // export class Vibecheck extends Contract {
+    txn OnCompletion
+    !
+    txn ApplicationID
+    !
+    &&
+    assert // OnCompletion must be NoOp && can only call when creating
+    intc_0 // 1
+    return
+
+
+// smart_contracts/vibecheck/contract.algo.ts::Vibecheck.hello[routing]() -> void:
+hello:
+    // smart_contracts/vibecheck/contract.algo.ts:29
+    // @abimethod({ readonly: true })
+    txna ApplicationArgs 1
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    // smart_contracts/vibecheck/contract.algo.ts:31
+    // return `Hello, ${name}`
+    pushbytes "Hello, "
+    swap
+    concat
+    // smart_contracts/vibecheck/contract.algo.ts:29
+    // @abimethod({ readonly: true })
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// smart_contracts/vibecheck/contract.algo.ts::Vibecheck.init[routing]() -> void:
+init:
+    // smart_contracts/vibecheck/contract.algo.ts:34
+    // public init(payMbr: gtxn.PaymentTxn): void {
+    txn GroupIndex
+    intc_0 // 1
+    -
+    dup
+    gtxns TypeEnum
+    intc_0 // pay
+    ==
+    assert // transaction type is pay
+    // smart_contracts/vibecheck/contract.algo.ts:38-45
+    // assertMatch(
+    //   payMbr,
+    //   {
+    //     receiver: Global.currentApplicationAddress,
+    //     amount: { greaterThanEq: mbrToCover },
+    //   },
+    //   'payment to app account required for MBR',
+    // )
+    dup
+    gtxns Receiver
+    // smart_contracts/vibecheck/contract.algo.ts:41
+    // receiver: Global.currentApplicationAddress,
+    global CurrentApplicationAddress
+    // smart_contracts/vibecheck/contract.algo.ts:38-45
+    // assertMatch(
+    //   payMbr,
+    //   {
+    //     receiver: Global.currentApplicationAddress,
+    //     amount: { greaterThanEq: mbrToCover },
+    //   },
+    //   'payment to app account required for MBR',
+    // )
+    ==
+    swap
+    gtxns Amount
+    // smart_contracts/vibecheck/contract.algo.ts:36
+    // this.getBoxMbr(UINT64_BYTES_SIZE) + this.getBoxMbr(UINT64_BYTES_SIZE) + this.getBoxMbr(ADDRESS_BYTES_SIZE)
+    pushint 26700 // 26700
+    // smart_contracts/vibecheck/contract.algo.ts:38-45
+    // assertMatch(
+    //   payMbr,
+    //   {
+    //     receiver: Global.currentApplicationAddress,
+    //     amount: { greaterThanEq: mbrToCover },
+    //   },
+    //   'payment to app account required for MBR',
+    // )
+    >=
+    &&
+    assert // payment to app account required for MBR
+    // smart_contracts/vibecheck/contract.algo.ts:23
+    // public trustedApp = BoxMap<Account, arc4.DynamicArray<arc4.Uint64>>({ keyPrefix: 'trusted_app' })
+    bytec_0 // "trusted_app"
+    // smart_contracts/vibecheck/contract.algo.ts:47
+    // assert(!this.trustedApp(Txn.sender).exists, 'profile already initialized')
+    txn Sender
+    // smart_contracts/vibecheck/contract.algo.ts:23
+    // public trustedApp = BoxMap<Account, arc4.DynamicArray<arc4.Uint64>>({ keyPrefix: 'trusted_app' })
+    concat
+    // smart_contracts/vibecheck/contract.algo.ts:47
+    // assert(!this.trustedApp(Txn.sender).exists, 'profile already initialized')
+    box_len
+    bury 1
+    !
+    assert // profile already initialized
+    // smart_contracts/vibecheck/contract.algo.ts:25
+    // public trustedAsa = BoxMap<Account, arc4.DynamicArray<arc4.Uint64>>({ keyPrefix: 'trusted_asa' })
+    bytec_1 // "trusted_asa"
+    // smart_contracts/vibecheck/contract.algo.ts:48
+    // assert(!this.trustedAsa(Txn.sender).exists, 'profile already initialized')
+    txn Sender
+    // smart_contracts/vibecheck/contract.algo.ts:25
+    // public trustedAsa = BoxMap<Account, arc4.DynamicArray<arc4.Uint64>>({ keyPrefix: 'trusted_asa' })
+    concat
+    // smart_contracts/vibecheck/contract.algo.ts:48
+    // assert(!this.trustedAsa(Txn.sender).exists, 'profile already initialized')
+    box_len
+    bury 1
+    !
+    assert // profile already initialized
+    // smart_contracts/vibecheck/contract.algo.ts:27
+    // public adjacencyList = BoxMap<Account, arc4.DynamicArray<arc4.Address>>({ keyPrefix: 'adjacency_list' })
+    bytec_2 // "adjacency_list"
+    // smart_contracts/vibecheck/contract.algo.ts:49
+    // assert(!this.adjacencyList(Txn.sender).exists, 'profile already initialized')
+    txn Sender
+    // smart_contracts/vibecheck/contract.algo.ts:27
+    // public adjacencyList = BoxMap<Account, arc4.DynamicArray<arc4.Address>>({ keyPrefix: 'adjacency_list' })
+    concat
+    // smart_contracts/vibecheck/contract.algo.ts:49
+    // assert(!this.adjacencyList(Txn.sender).exists, 'profile already initialized')
+    box_len
+    bury 1
+    !
+    assert // profile already initialized
+    // smart_contracts/vibecheck/contract.algo.ts:23
+    // public trustedApp = BoxMap<Account, arc4.DynamicArray<arc4.Uint64>>({ keyPrefix: 'trusted_app' })
+    bytec_0 // "trusted_app"
+    // smart_contracts/vibecheck/contract.algo.ts:51
+    // this.trustedApp(Txn.sender).value = new arc4.DynamicArray<arc4.Uint64>()
+    txn Sender
+    // smart_contracts/vibecheck/contract.algo.ts:23
+    // public trustedApp = BoxMap<Account, arc4.DynamicArray<arc4.Uint64>>({ keyPrefix: 'trusted_app' })
+    concat
+    // smart_contracts/vibecheck/contract.algo.ts:51
+    // this.trustedApp(Txn.sender).value = new arc4.DynamicArray<arc4.Uint64>()
+    dup
+    box_del
+    pop
+    bytec_3 // 0x0000
+    box_put
+    // smart_contracts/vibecheck/contract.algo.ts:25
+    // public trustedAsa = BoxMap<Account, arc4.DynamicArray<arc4.Uint64>>({ keyPrefix: 'trusted_asa' })
+    bytec_1 // "trusted_asa"
+    // smart_contracts/vibecheck/contract.algo.ts:52
+    // this.trustedAsa(Txn.sender).value = new arc4.DynamicArray<arc4.Uint64>()
+    txn Sender
+    // smart_contracts/vibecheck/contract.algo.ts:25
+    // public trustedAsa = BoxMap<Account, arc4.DynamicArray<arc4.Uint64>>({ keyPrefix: 'trusted_asa' })
+    concat
+    // smart_contracts/vibecheck/contract.algo.ts:52
+    // this.trustedAsa(Txn.sender).value = new arc4.DynamicArray<arc4.Uint64>()
+    dup
+    box_del
+    pop
+    // smart_contracts/vibecheck/contract.algo.ts:51
+    // this.trustedApp(Txn.sender).value = new arc4.DynamicArray<arc4.Uint64>()
+    bytec_3 // 0x0000
+    // smart_contracts/vibecheck/contract.algo.ts:52
+    // this.trustedAsa(Txn.sender).value = new arc4.DynamicArray<arc4.Uint64>()
+    box_put
+    // smart_contracts/vibecheck/contract.algo.ts:27
+    // public adjacencyList = BoxMap<Account, arc4.DynamicArray<arc4.Address>>({ keyPrefix: 'adjacency_list' })
+    bytec_2 // "adjacency_list"
+    // smart_contracts/vibecheck/contract.algo.ts:53
+    // this.adjacencyList(Txn.sender).value = new arc4.DynamicArray<arc4.Address>()
+    txn Sender
+    // smart_contracts/vibecheck/contract.algo.ts:27
+    // public adjacencyList = BoxMap<Account, arc4.DynamicArray<arc4.Address>>({ keyPrefix: 'adjacency_list' })
+    concat
+    // smart_contracts/vibecheck/contract.algo.ts:53
+    // this.adjacencyList(Txn.sender).value = new arc4.DynamicArray<arc4.Address>()
+    dup
+    box_del
+    pop
+    bytec_3 // 0x0000
+    box_put
+    // smart_contracts/vibecheck/contract.algo.ts:34
+    // public init(payMbr: gtxn.PaymentTxn): void {
+    intc_0 // 1
+    return
+
+
+// smart_contracts/vibecheck/contract.algo.ts::Vibecheck.add[routing]() -> void:
+add:
+    intc_1 // 0
+    dupn 3
+    pushbytes ""
+    // smart_contracts/vibecheck/contract.algo.ts:56
+    // public add(app: arc4.Uint64, asset: arc4.Uint64, peer: arc4.Address): void {
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    txna ApplicationArgs 3
+    dup
+    cover 2
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    // smart_contracts/vibecheck/contract.algo.ts:57
+    // this.assertSenderProfile()
+    callsub assertSenderProfile
+    // smart_contracts/vibecheck/contract.algo.ts:59
+    // if (app !== new arc4.Uint64(0)) {
+    bytec 5 // 0x0000000000000000
+    !=
+    bz add_after_if_else@5
+    // smart_contracts/vibecheck/contract.algo.ts:23
+    // public trustedApp = BoxMap<Account, arc4.DynamicArray<arc4.Uint64>>({ keyPrefix: 'trusted_app' })
+    bytec_0 // "trusted_app"
+    // smart_contracts/vibecheck/contract.algo.ts:60
+    // const trustedAppList = clone(this.trustedApp(Txn.sender).value)
+    txn Sender
+    // smart_contracts/vibecheck/contract.algo.ts:23
+    // public trustedApp = BoxMap<Account, arc4.DynamicArray<arc4.Uint64>>({ keyPrefix: 'trusted_app' })
+    concat
+    // smart_contracts/vibecheck/contract.algo.ts:60
+    // const trustedAppList = clone(this.trustedApp(Txn.sender).value)
+    box_get
+    assert // Box must have value
+    // smart_contracts/vibecheck/contract.algo.ts:61
+    // if (!this.containsUint64(trustedAppList, app)) {
+    dig 3
+    callsub containsUint64
+    bury 7
+    bnz add_after_if_else@5
+    // smart_contracts/vibecheck/contract.algo.ts:62
+    // assert(trustedAppList.length < this.getMaxLength(UINT64_BYTES_SIZE), 'max number of trusted applications reached')
+    dig 5
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    dup
+    // smart_contracts/vibecheck/contract.algo.ts:179
+    // return MAX_BOX_SIZE / itemSize
+    pushint 128 // 128
+    // smart_contracts/vibecheck/contract.algo.ts:62
+    // assert(trustedAppList.length < this.getMaxLength(UINT64_BYTES_SIZE), 'max number of trusted applications reached')
+    <
+    assert // max number of trusted applications reached
+    // smart_contracts/vibecheck/contract.algo.ts:63
+    // trustedAppList.push(app)
+    swap
+    dig 4
+    concat // on error: max array length exceeded
+    swap
+    intc_0 // 1
+    +
+    itob
+    extract 6 2
+    replace2 0
+    // smart_contracts/vibecheck/contract.algo.ts:23
+    // public trustedApp = BoxMap<Account, arc4.DynamicArray<arc4.Uint64>>({ keyPrefix: 'trusted_app' })
+    bytec_0 // "trusted_app"
+    // smart_contracts/vibecheck/contract.algo.ts:64
+    // this.trustedApp(Txn.sender).value = clone(trustedAppList)
+    txn Sender
+    // smart_contracts/vibecheck/contract.algo.ts:23
+    // public trustedApp = BoxMap<Account, arc4.DynamicArray<arc4.Uint64>>({ keyPrefix: 'trusted_app' })
+    concat
+    // smart_contracts/vibecheck/contract.algo.ts:64
+    // this.trustedApp(Txn.sender).value = clone(trustedAppList)
+    dup
+    box_del
+    pop
+    swap
+    box_put
+
+add_after_if_else@5:
+    // smart_contracts/vibecheck/contract.algo.ts:68
+    // if (asset !== new arc4.Uint64(0)) {
+    dig 1
+    bytec 5 // 0x0000000000000000
+    !=
+    bz add_after_if_else@9
+    // smart_contracts/vibecheck/contract.algo.ts:25
+    // public trustedAsa = BoxMap<Account, arc4.DynamicArray<arc4.Uint64>>({ keyPrefix: 'trusted_asa' })
+    bytec_1 // "trusted_asa"
+    // smart_contracts/vibecheck/contract.algo.ts:69
+    // const trustedAsaList = clone(this.trustedAsa(Txn.sender).value)
+    txn Sender
+    // smart_contracts/vibecheck/contract.algo.ts:25
+    // public trustedAsa = BoxMap<Account, arc4.DynamicArray<arc4.Uint64>>({ keyPrefix: 'trusted_asa' })
+    concat
+    // smart_contracts/vibecheck/contract.algo.ts:69
+    // const trustedAsaList = clone(this.trustedAsa(Txn.sender).value)
+    box_get
+    assert // Box must have value
+    // smart_contracts/vibecheck/contract.algo.ts:70
+    // if (!this.containsUint64(trustedAsaList, asset)) {
+    dig 2
+    callsub containsUint64
+    bury 6
+    bnz add_after_if_else@9
+    // smart_contracts/vibecheck/contract.algo.ts:71
+    // assert(trustedAsaList.length < this.getMaxLength(UINT64_BYTES_SIZE), 'max number of trusted assets reached')
+    dig 4
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    dup
+    // smart_contracts/vibecheck/contract.algo.ts:179
+    // return MAX_BOX_SIZE / itemSize
+    pushint 128 // 128
+    // smart_contracts/vibecheck/contract.algo.ts:71
+    // assert(trustedAsaList.length < this.getMaxLength(UINT64_BYTES_SIZE), 'max number of trusted assets reached')
+    <
+    assert // max number of trusted assets reached
+    // smart_contracts/vibecheck/contract.algo.ts:72
+    // trustedAsaList.push(asset)
+    swap
+    dig 3
+    concat // on error: max array length exceeded
+    swap
+    intc_0 // 1
+    +
+    itob
+    extract 6 2
+    replace2 0
+    // smart_contracts/vibecheck/contract.algo.ts:25
+    // public trustedAsa = BoxMap<Account, arc4.DynamicArray<arc4.Uint64>>({ keyPrefix: 'trusted_asa' })
+    bytec_1 // "trusted_asa"
+    // smart_contracts/vibecheck/contract.algo.ts:73
+    // this.trustedAsa(Txn.sender).value = clone(trustedAsaList)
+    txn Sender
+    // smart_contracts/vibecheck/contract.algo.ts:25
+    // public trustedAsa = BoxMap<Account, arc4.DynamicArray<arc4.Uint64>>({ keyPrefix: 'trusted_asa' })
+    concat
+    // smart_contracts/vibecheck/contract.algo.ts:73
+    // this.trustedAsa(Txn.sender).value = clone(trustedAsaList)
+    dup
+    box_del
+    pop
+    swap
+    box_put
+
+add_after_if_else@9:
+    // smart_contracts/vibecheck/contract.algo.ts:77
+    // if (peer !== new arc4.Address(Global.zeroAddress)) {
+    dup
+    global ZeroAddress
+    !=
+    bz add_after_if_else@13
+    // smart_contracts/vibecheck/contract.algo.ts:27
+    // public adjacencyList = BoxMap<Account, arc4.DynamicArray<arc4.Address>>({ keyPrefix: 'adjacency_list' })
+    bytec_2 // "adjacency_list"
+    // smart_contracts/vibecheck/contract.algo.ts:78
+    // const adjacency = clone(this.adjacencyList(Txn.sender).value)
+    txn Sender
+    // smart_contracts/vibecheck/contract.algo.ts:27
+    // public adjacencyList = BoxMap<Account, arc4.DynamicArray<arc4.Address>>({ keyPrefix: 'adjacency_list' })
+    concat
+    dup
+    bury 8
+    // smart_contracts/vibecheck/contract.algo.ts:78
+    // const adjacency = clone(this.adjacencyList(Txn.sender).value)
+    box_get
+    swap
+    bury 9
+    assert // Box must have value
+    // smart_contracts/vibecheck/contract.algo.ts:146
+    // for (let i: uint64 = 0; i < values.length; i += 1) {
+    intc_1 // 0
+    bury 4
+
+add_while_top@15:
+    // smart_contracts/vibecheck/contract.algo.ts:146
+    // for (let i: uint64 = 0; i < values.length; i += 1) {
+    dig 6
+    intc_1 // 0
+    pushint 2 // 2
+    box_extract
+    btoi
+    dig 4
+    >
+    bz add_after_while@19
+    // smart_contracts/vibecheck/contract.algo.ts:147
+    // if (values[i] === candidate) {
+    dig 3
+    intc_2 // 32
+    *
+    pushint 2 // 2
+    +
+    dig 7
+    swap
+    intc_2 // 32
+    box_extract
+    dig 1
+    ==
+    bz add_after_if_else@18
+    // smart_contracts/vibecheck/contract.algo.ts:148
+    // return true
+    intc_0 // 1
+
+add_after_inlined_smart_contracts/vibecheck/contract.algo.ts::Vibecheck.containsAddress@20:
+    // smart_contracts/vibecheck/contract.algo.ts:79
+    // if (!this.containsAddress(adjacency, peer)) {
+    bnz add_after_if_else@13
+    // smart_contracts/vibecheck/contract.algo.ts:80
+    // assert(adjacency.length < this.getMaxLength(ADDRESS_BYTES_SIZE), 'max number of trusted peers reached')
+    dig 6
+    intc_1 // 0
+    pushint 2 // 2
+    box_extract
+    btoi
+    // smart_contracts/vibecheck/contract.algo.ts:179
+    // return MAX_BOX_SIZE / itemSize
+    intc_2 // 32
+    // smart_contracts/vibecheck/contract.algo.ts:80
+    // assert(adjacency.length < this.getMaxLength(ADDRESS_BYTES_SIZE), 'max number of trusted peers reached')
+    <
+    assert // max number of trusted peers reached
+    // smart_contracts/vibecheck/contract.algo.ts:81
+    // adjacency.push(peer)
+    dig 7
+    dup
+    dig 2
+    concat // on error: max array length exceeded
+    swap
+    intc_1 // 0
+    extract_uint16
+    intc_0 // 1
+    +
+    itob
+    extract 6 2
+    replace2 0
+    // smart_contracts/vibecheck/contract.algo.ts:27
+    // public adjacencyList = BoxMap<Account, arc4.DynamicArray<arc4.Address>>({ keyPrefix: 'adjacency_list' })
+    bytec_2 // "adjacency_list"
+    // smart_contracts/vibecheck/contract.algo.ts:82
+    // this.adjacencyList(Txn.sender).value = clone(adjacency)
+    txn Sender
+    // smart_contracts/vibecheck/contract.algo.ts:27
+    // public adjacencyList = BoxMap<Account, arc4.DynamicArray<arc4.Address>>({ keyPrefix: 'adjacency_list' })
+    concat
+    // smart_contracts/vibecheck/contract.algo.ts:82
+    // this.adjacencyList(Txn.sender).value = clone(adjacency)
+    dup
+    box_del
+    pop
+    swap
+    box_put
+
+add_after_if_else@13:
+    // smart_contracts/vibecheck/contract.algo.ts:56
+    // public add(app: arc4.Uint64, asset: arc4.Uint64, peer: arc4.Address): void {
+    intc_0 // 1
+    return
+
+add_after_if_else@18:
+    // smart_contracts/vibecheck/contract.algo.ts:146
+    // for (let i: uint64 = 0; i < values.length; i += 1) {
+    dig 3
+    intc_0 // 1
+    +
+    bury 4
+    b add_while_top@15
+
+add_after_while@19:
+    // smart_contracts/vibecheck/contract.algo.ts:151
+    // return false
+    intc_1 // 0
+    // smart_contracts/vibecheck/contract.algo.ts:79
+    // if (!this.containsAddress(adjacency, peer)) {
+    b add_after_inlined_smart_contracts/vibecheck/contract.algo.ts::Vibecheck.containsAddress@20
+
+
+// smart_contracts/vibecheck/contract.algo.ts::Vibecheck.remove[routing]() -> void:
+remove:
+    intc_1 // 0
+    dupn 2
+    pushbytes ""
+    // smart_contracts/vibecheck/contract.algo.ts:87
+    // public remove(app: arc4.Uint64, asset: arc4.Uint64, peer: arc4.Address): void {
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    txna ApplicationArgs 3
+    dup
+    cover 2
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    // smart_contracts/vibecheck/contract.algo.ts:88
+    // this.assertSenderProfile()
+    callsub assertSenderProfile
+    // smart_contracts/vibecheck/contract.algo.ts:90
+    // if (app !== new arc4.Uint64(0)) {
+    bytec 5 // 0x0000000000000000
+    !=
+    bz remove_after_if_else@3
+    // smart_contracts/vibecheck/contract.algo.ts:23
+    // public trustedApp = BoxMap<Account, arc4.DynamicArray<arc4.Uint64>>({ keyPrefix: 'trusted_app' })
+    bytec_0 // "trusted_app"
+    // smart_contracts/vibecheck/contract.algo.ts:91
+    // const trustedAppList = clone(this.trustedApp(Txn.sender).value)
+    txn Sender
+    // smart_contracts/vibecheck/contract.algo.ts:23
+    // public trustedApp = BoxMap<Account, arc4.DynamicArray<arc4.Uint64>>({ keyPrefix: 'trusted_app' })
+    concat
+    // smart_contracts/vibecheck/contract.algo.ts:91
+    // const trustedAppList = clone(this.trustedApp(Txn.sender).value)
+    box_get
+    assert // Box must have value
+    // smart_contracts/vibecheck/contract.algo.ts:92
+    // this.trustedApp(Txn.sender).value = clone(this.removeUint64(trustedAppList, app))
+    dig 3
+    callsub removeUint64
+    pop
+    // smart_contracts/vibecheck/contract.algo.ts:23
+    // public trustedApp = BoxMap<Account, arc4.DynamicArray<arc4.Uint64>>({ keyPrefix: 'trusted_app' })
+    bytec_0 // "trusted_app"
+    // smart_contracts/vibecheck/contract.algo.ts:92
+    // this.trustedApp(Txn.sender).value = clone(this.removeUint64(trustedAppList, app))
+    txn Sender
+    // smart_contracts/vibecheck/contract.algo.ts:23
+    // public trustedApp = BoxMap<Account, arc4.DynamicArray<arc4.Uint64>>({ keyPrefix: 'trusted_app' })
+    concat
+    // smart_contracts/vibecheck/contract.algo.ts:92
+    // this.trustedApp(Txn.sender).value = clone(this.removeUint64(trustedAppList, app))
+    dup
+    box_del
+    pop
+    swap
+    box_put
+
+remove_after_if_else@3:
+    // smart_contracts/vibecheck/contract.algo.ts:95
+    // if (asset !== new arc4.Uint64(0)) {
+    dig 1
+    bytec 5 // 0x0000000000000000
+    !=
+    bz remove_after_if_else@5
+    // smart_contracts/vibecheck/contract.algo.ts:25
+    // public trustedAsa = BoxMap<Account, arc4.DynamicArray<arc4.Uint64>>({ keyPrefix: 'trusted_asa' })
+    bytec_1 // "trusted_asa"
+    // smart_contracts/vibecheck/contract.algo.ts:96
+    // const trustedAsaList = clone(this.trustedAsa(Txn.sender).value)
+    txn Sender
+    // smart_contracts/vibecheck/contract.algo.ts:25
+    // public trustedAsa = BoxMap<Account, arc4.DynamicArray<arc4.Uint64>>({ keyPrefix: 'trusted_asa' })
+    concat
+    // smart_contracts/vibecheck/contract.algo.ts:96
+    // const trustedAsaList = clone(this.trustedAsa(Txn.sender).value)
+    box_get
+    assert // Box must have value
+    // smart_contracts/vibecheck/contract.algo.ts:97
+    // this.trustedAsa(Txn.sender).value = clone(this.removeUint64(trustedAsaList, asset))
+    dig 2
+    callsub removeUint64
+    pop
+    // smart_contracts/vibecheck/contract.algo.ts:25
+    // public trustedAsa = BoxMap<Account, arc4.DynamicArray<arc4.Uint64>>({ keyPrefix: 'trusted_asa' })
+    bytec_1 // "trusted_asa"
+    // smart_contracts/vibecheck/contract.algo.ts:97
+    // this.trustedAsa(Txn.sender).value = clone(this.removeUint64(trustedAsaList, asset))
+    txn Sender
+    // smart_contracts/vibecheck/contract.algo.ts:25
+    // public trustedAsa = BoxMap<Account, arc4.DynamicArray<arc4.Uint64>>({ keyPrefix: 'trusted_asa' })
+    concat
+    // smart_contracts/vibecheck/contract.algo.ts:97
+    // this.trustedAsa(Txn.sender).value = clone(this.removeUint64(trustedAsaList, asset))
+    dup
+    box_del
+    pop
+    swap
+    box_put
+
+remove_after_if_else@5:
+    // smart_contracts/vibecheck/contract.algo.ts:100
+    // if (peer !== new arc4.Address(Global.zeroAddress)) {
+    dup
+    global ZeroAddress
+    !=
+    bz remove_after_if_else@7
+    // smart_contracts/vibecheck/contract.algo.ts:27
+    // public adjacencyList = BoxMap<Account, arc4.DynamicArray<arc4.Address>>({ keyPrefix: 'adjacency_list' })
+    bytec_2 // "adjacency_list"
+    // smart_contracts/vibecheck/contract.algo.ts:101
+    // const adjacency = clone(this.adjacencyList(Txn.sender).value)
+    txn Sender
+    // smart_contracts/vibecheck/contract.algo.ts:27
+    // public adjacencyList = BoxMap<Account, arc4.DynamicArray<arc4.Address>>({ keyPrefix: 'adjacency_list' })
+    concat
+    bury 6
+    // smart_contracts/vibecheck/contract.algo.ts:165
+    // const next = new arc4.DynamicArray<arc4.Address>()
+    bytec_3 // 0x0000
+    bury 5
+    // smart_contracts/vibecheck/contract.algo.ts:166
+    // for (let i: uint64 = 0; i < values.length; i += 1) {
+    intc_1 // 0
+    bury 4
+
+remove_while_top@9:
+    // smart_contracts/vibecheck/contract.algo.ts:166
+    // for (let i: uint64 = 0; i < values.length; i += 1) {
+    dig 5
+    intc_1 // 0
+    pushint 2 // 2
+    box_extract
+    btoi
+    dig 4
+    >
+    bz remove_after_while@13
+    // smart_contracts/vibecheck/contract.algo.ts:167
+    // if (values[i] !== candidate) {
+    dig 3
+    intc_2 // 32
+    *
+    pushint 2 // 2
+    +
+    dig 6
+    swap
+    intc_2 // 32
+    box_extract
+    dup
+    bury 8
+    dig 1
+    !=
+    bz remove_after_if_else@12
+    // smart_contracts/vibecheck/contract.algo.ts:168
+    // next.push(values[i])
+    dig 4
+    dup
+    dig 8
+    concat // on error: max array length exceeded
+    swap
+    intc_1 // 0
+    extract_uint16
+    intc_0 // 1
+    +
+    itob
+    extract 6 2
+    replace2 0
+    bury 5
+
+remove_after_if_else@12:
+    // smart_contracts/vibecheck/contract.algo.ts:166
+    // for (let i: uint64 = 0; i < values.length; i += 1) {
+    dig 3
+    intc_0 // 1
+    +
+    bury 4
+    b remove_while_top@9
+
+remove_after_while@13:
+    // smart_contracts/vibecheck/contract.algo.ts:27
+    // public adjacencyList = BoxMap<Account, arc4.DynamicArray<arc4.Address>>({ keyPrefix: 'adjacency_list' })
+    bytec_2 // "adjacency_list"
+    // smart_contracts/vibecheck/contract.algo.ts:102
+    // this.adjacencyList(Txn.sender).value = clone(this.removeAddress(adjacency, peer))
+    txn Sender
+    // smart_contracts/vibecheck/contract.algo.ts:27
+    // public adjacencyList = BoxMap<Account, arc4.DynamicArray<arc4.Address>>({ keyPrefix: 'adjacency_list' })
+    concat
+    // smart_contracts/vibecheck/contract.algo.ts:102
+    // this.adjacencyList(Txn.sender).value = clone(this.removeAddress(adjacency, peer))
+    dup
+    box_del
+    pop
+    dig 5
+    box_put
+
+remove_after_if_else@7:
+    // smart_contracts/vibecheck/contract.algo.ts:87
+    // public remove(app: arc4.Uint64, asset: arc4.Uint64, peer: arc4.Address): void {
+    intc_0 // 1
+    return
+
+
+// smart_contracts/vibecheck/contract.algo.ts::Vibecheck.getTrustedApp[routing]() -> void:
+getTrustedApp:
+    // smart_contracts/vibecheck/contract.algo.ts:106
+    // @abimethod({ readonly: true })
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    // smart_contracts/vibecheck/contract.algo.ts:23
+    // public trustedApp = BoxMap<Account, arc4.DynamicArray<arc4.Uint64>>({ keyPrefix: 'trusted_app' })
+    bytec_0 // "trusted_app"
+    swap
+    concat
+    dup
+    // smart_contracts/vibecheck/contract.algo.ts:108
+    // if (!this.trustedApp(account).exists) {
+    box_len
+    bury 1
+    bnz getTrustedApp_after_if_else@3
+    // smart_contracts/vibecheck/contract.algo.ts:109
+    // return new arc4.DynamicArray<arc4.Uint64>()
+    bytec_3 // 0x0000
+
+getTrustedApp_after_inlined_smart_contracts/vibecheck/contract.algo.ts::Vibecheck.getTrustedApp@4:
+    // smart_contracts/vibecheck/contract.algo.ts:106
+    // @abimethod({ readonly: true })
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+getTrustedApp_after_if_else@3:
+    // smart_contracts/vibecheck/contract.algo.ts:111
+    // return clone(this.trustedApp(account).value)
+    dup
+    box_get
+    assert // Box must have value
+    // smart_contracts/vibecheck/contract.algo.ts:106
+    // @abimethod({ readonly: true })
+    b getTrustedApp_after_inlined_smart_contracts/vibecheck/contract.algo.ts::Vibecheck.getTrustedApp@4
+
+
+// smart_contracts/vibecheck/contract.algo.ts::Vibecheck.getTrustedASA[routing]() -> void:
+getTrustedASA:
+    // smart_contracts/vibecheck/contract.algo.ts:114
+    // @abimethod({ readonly: true })
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    // smart_contracts/vibecheck/contract.algo.ts:25
+    // public trustedAsa = BoxMap<Account, arc4.DynamicArray<arc4.Uint64>>({ keyPrefix: 'trusted_asa' })
+    bytec_1 // "trusted_asa"
+    swap
+    concat
+    dup
+    // smart_contracts/vibecheck/contract.algo.ts:116
+    // if (!this.trustedAsa(account).exists) {
+    box_len
+    bury 1
+    bnz getTrustedASA_after_if_else@3
+    // smart_contracts/vibecheck/contract.algo.ts:117
+    // return new arc4.DynamicArray<arc4.Uint64>()
+    bytec_3 // 0x0000
+
+getTrustedASA_after_inlined_smart_contracts/vibecheck/contract.algo.ts::Vibecheck.getTrustedASA@4:
+    // smart_contracts/vibecheck/contract.algo.ts:114
+    // @abimethod({ readonly: true })
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+getTrustedASA_after_if_else@3:
+    // smart_contracts/vibecheck/contract.algo.ts:119
+    // return clone(this.trustedAsa(account).value)
+    dup
+    box_get
+    assert // Box must have value
+    // smart_contracts/vibecheck/contract.algo.ts:114
+    // @abimethod({ readonly: true })
+    b getTrustedASA_after_inlined_smart_contracts/vibecheck/contract.algo.ts::Vibecheck.getTrustedASA@4
+
+
+// smart_contracts/vibecheck/contract.algo.ts::Vibecheck.getAdjacencyList[routing]() -> void:
+getAdjacencyList:
+    // smart_contracts/vibecheck/contract.algo.ts:122
+    // @abimethod({ readonly: true })
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    // smart_contracts/vibecheck/contract.algo.ts:27
+    // public adjacencyList = BoxMap<Account, arc4.DynamicArray<arc4.Address>>({ keyPrefix: 'adjacency_list' })
+    bytec_2 // "adjacency_list"
+    swap
+    concat
+    dup
+    // smart_contracts/vibecheck/contract.algo.ts:124
+    // if (!this.adjacencyList(account).exists) {
+    box_len
+    bury 1
+    bnz getAdjacencyList_after_if_else@3
+    // smart_contracts/vibecheck/contract.algo.ts:125
+    // return new arc4.DynamicArray<arc4.Address>()
+    bytec_3 // 0x0000
+
+getAdjacencyList_after_inlined_smart_contracts/vibecheck/contract.algo.ts::Vibecheck.getAdjacencyList@4:
+    // smart_contracts/vibecheck/contract.algo.ts:122
+    // @abimethod({ readonly: true })
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+getAdjacencyList_after_if_else@3:
+    // smart_contracts/vibecheck/contract.algo.ts:127
+    // return clone(this.adjacencyList(account).value)
+    dup
+    box_get
+    assert // Box must have value
+    // smart_contracts/vibecheck/contract.algo.ts:122
+    // @abimethod({ readonly: true })
+    b getAdjacencyList_after_inlined_smart_contracts/vibecheck/contract.algo.ts::Vibecheck.getAdjacencyList@4
+
+
+// smart_contracts/vibecheck/contract.algo.ts::Vibecheck.assertSenderProfile() -> void:
+assertSenderProfile:
+    // smart_contracts/vibecheck/contract.algo.ts:23
+    // public trustedApp = BoxMap<Account, arc4.DynamicArray<arc4.Uint64>>({ keyPrefix: 'trusted_app' })
+    bytec_0 // "trusted_app"
+    // smart_contracts/vibecheck/contract.algo.ts:131
+    // assertMatch(this.trustedApp(Txn.sender), { exists: true }, 'trusted app list should exist, call init first')
+    txn Sender
+    // smart_contracts/vibecheck/contract.algo.ts:23
+    // public trustedApp = BoxMap<Account, arc4.DynamicArray<arc4.Uint64>>({ keyPrefix: 'trusted_app' })
+    concat
+    // smart_contracts/vibecheck/contract.algo.ts:131
+    // assertMatch(this.trustedApp(Txn.sender), { exists: true }, 'trusted app list should exist, call init first')
+    box_len
+    bury 1
+    intc_0 // 1
+    ==
+    assert // trusted app list should exist, call init first
+    // smart_contracts/vibecheck/contract.algo.ts:25
+    // public trustedAsa = BoxMap<Account, arc4.DynamicArray<arc4.Uint64>>({ keyPrefix: 'trusted_asa' })
+    bytec_1 // "trusted_asa"
+    // smart_contracts/vibecheck/contract.algo.ts:132
+    // assertMatch(this.trustedAsa(Txn.sender), { exists: true }, 'trusted asset list should exist, call init first')
+    txn Sender
+    // smart_contracts/vibecheck/contract.algo.ts:25
+    // public trustedAsa = BoxMap<Account, arc4.DynamicArray<arc4.Uint64>>({ keyPrefix: 'trusted_asa' })
+    concat
+    // smart_contracts/vibecheck/contract.algo.ts:132
+    // assertMatch(this.trustedAsa(Txn.sender), { exists: true }, 'trusted asset list should exist, call init first')
+    box_len
+    bury 1
+    intc_0 // 1
+    ==
+    assert // trusted asset list should exist, call init first
+    // smart_contracts/vibecheck/contract.algo.ts:27
+    // public adjacencyList = BoxMap<Account, arc4.DynamicArray<arc4.Address>>({ keyPrefix: 'adjacency_list' })
+    bytec_2 // "adjacency_list"
+    // smart_contracts/vibecheck/contract.algo.ts:133
+    // assertMatch(this.adjacencyList(Txn.sender), { exists: true }, 'adjacency list should exist, call init first')
+    txn Sender
+    // smart_contracts/vibecheck/contract.algo.ts:27
+    // public adjacencyList = BoxMap<Account, arc4.DynamicArray<arc4.Address>>({ keyPrefix: 'adjacency_list' })
+    concat
+    // smart_contracts/vibecheck/contract.algo.ts:133
+    // assertMatch(this.adjacencyList(Txn.sender), { exists: true }, 'adjacency list should exist, call init first')
+    box_len
+    bury 1
+    intc_0 // 1
+    ==
+    assert // adjacency list should exist, call init first
+    retsub
+
+
+// smart_contracts/vibecheck/contract.algo.ts::Vibecheck.containsUint64(values: bytes, candidate: bytes) -> uint64, bytes:
+containsUint64:
+    // smart_contracts/vibecheck/contract.algo.ts:136
+    // private containsUint64(values: arc4.DynamicArray<arc4.Uint64>, candidate: arc4.Uint64): boolean {
+    proto 2 2
+    // smart_contracts/vibecheck/contract.algo.ts:137
+    // for (let i: uint64 = 0; i < values.length; i += 1) {
+    intc_1 // 0
+
+containsUint64_while_top@1:
+    // smart_contracts/vibecheck/contract.algo.ts:137
+    // for (let i: uint64 = 0; i < values.length; i += 1) {
+    frame_dig -2
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    frame_dig 0
+    >
+    bz containsUint64_after_while@5
+    // smart_contracts/vibecheck/contract.algo.ts:138
+    // if (values[i] === candidate) {
+    frame_dig -2
+    extract 2 0
+    frame_dig 0
+    intc_3 // 8
+    *
+    intc_3 // 8
+    extract3 // on error: index access is out of bounds
+    frame_dig -1
+    ==
+    bz containsUint64_after_if_else@4
+    // smart_contracts/vibecheck/contract.algo.ts:139
+    // return true
+    intc_0 // 1
+    frame_dig -2
+    uncover 2
+    retsub
+
+containsUint64_after_if_else@4:
+    // smart_contracts/vibecheck/contract.algo.ts:137
+    // for (let i: uint64 = 0; i < values.length; i += 1) {
+    frame_dig 0
+    intc_0 // 1
+    +
+    frame_bury 0
+    b containsUint64_while_top@1
+
+containsUint64_after_while@5:
+    // smart_contracts/vibecheck/contract.algo.ts:142
+    // return false
+    intc_1 // 0
+    frame_dig -2
+    uncover 2
+    retsub
+
+
+// smart_contracts/vibecheck/contract.algo.ts::Vibecheck.removeUint64(values: bytes, candidate: bytes) -> bytes, bytes:
+removeUint64:
+    // smart_contracts/vibecheck/contract.algo.ts:154
+    // private removeUint64(values: arc4.DynamicArray<arc4.Uint64>, candidate: arc4.Uint64): arc4.DynamicArray<arc4.Uint64> {
+    proto 2 2
+    intc_1 // 0
+    // smart_contracts/vibecheck/contract.algo.ts:155
+    // const next = new arc4.DynamicArray<arc4.Uint64>()
+    bytec_3 // 0x0000
+    // smart_contracts/vibecheck/contract.algo.ts:156
+    // for (let i: uint64 = 0; i < values.length; i += 1) {
+    intc_1 // 0
+
+removeUint64_while_top@1:
+    // smart_contracts/vibecheck/contract.algo.ts:156
+    // for (let i: uint64 = 0; i < values.length; i += 1) {
+    frame_dig -2
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    frame_dig 2
+    >
+    bz removeUint64_after_while@5
+    // smart_contracts/vibecheck/contract.algo.ts:157
+    // if (values[i] !== candidate) {
+    frame_dig -2
+    extract 2 0
+    frame_dig 2
+    intc_3 // 8
+    *
+    intc_3 // 8
+    extract3 // on error: index access is out of bounds
+    dup
+    frame_bury 0
+    frame_dig -1
+    !=
+    bz removeUint64_after_if_else@4
+    // smart_contracts/vibecheck/contract.algo.ts:158
+    // next.push(values[i])
+    frame_dig 1
+    dup
+    frame_dig 0
+    concat // on error: max array length exceeded
+    swap
+    intc_1 // 0
+    extract_uint16
+    intc_0 // 1
+    +
+    itob
+    extract 6 2
+    replace2 0
+    frame_bury 1
+
+removeUint64_after_if_else@4:
+    // smart_contracts/vibecheck/contract.algo.ts:156
+    // for (let i: uint64 = 0; i < values.length; i += 1) {
+    frame_dig 2
+    intc_0 // 1
+    +
+    frame_bury 2
+    b removeUint64_while_top@1
+
+removeUint64_after_while@5:
+    // smart_contracts/vibecheck/contract.algo.ts:161
+    // return next
+    frame_dig 1
+    frame_dig -2
+    frame_bury 1
+    frame_bury 0
+    retsub

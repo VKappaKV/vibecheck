@@ -2,6 +2,14 @@
 
 This project has been generated using AlgoKit. See below for default getting started instructions.
 
+## Trust graph demo
+
+This project now includes a WeTrust-inspired trust graph contract demo with helper SDK utilities under `utils/`.
+
+- Build contracts and regenerate typed clients: `npm run build`
+- Run unit + e2e tests: `npm run test`
+- Run scripted local demo flow: `npm run demo`
+
 # Setup
 
 ### Pre-requisites
@@ -152,6 +160,5 @@ This project makes use of Algorand TypeScript to build Algorand smart contracts.
 
 
 It has also been configured to have a productive dev experience out of the box in [VS Code](https://code.visualstudio.com/), see the [.vscode](./.vscode) folder.
-
 
 
