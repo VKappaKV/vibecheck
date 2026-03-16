@@ -40,6 +40,11 @@ export interface TrustHopBreakdown {
   contribution: number
 }
 
+export interface TrustEdge {
+  from: string
+  to: string
+}
+
 export interface TrustNetworkAnalysis {
   score: number
   seedAccount: string
@@ -48,6 +53,8 @@ export interface TrustNetworkAnalysis {
   contributions: TrustContribution[]
   hopBreakdown: TrustHopBreakdown[]
   allVisitedAccounts: string[]
+  depthByAccount: Record<string, number>
+  edges: TrustEdge[]
 }
 
 type QueueNode = {
@@ -169,6 +176,8 @@ function scoreTarget(
     visitedAccounts: visitedDepth.size,
     maxVisitedDepth: Math.max(0, ...visitedDepth.values()),
     allVisitedAccounts: [...visitedDepth.entries()].sort((a, b) => a[1] - b[1]).map(([account]) => account),
+    depthByAccount: Object.fromEntries(visitedDepth.entries()),
+    edges: [...parentMap.entries()].map(([to, from]) => ({ from, to })),
     hopBreakdown: [...hopMap.values()].sort((a, b) => a.depth - b.depth),
     contributions: contributions
       .map((item) => ({ ...item, path: buildPath(item.account) }))

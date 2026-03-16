@@ -1,12 +1,15 @@
-import { SupportedWallet, WalletId, WalletManager, WalletProvider } from '@txnlab/use-wallet-react'
+import { SupportedWallet, WalletId, WalletManager, WalletProvider, useWallet } from '@txnlab/use-wallet-react'
+import { Wallet } from 'lucide-react'
 import { SnackbarProvider } from 'notistack'
 import { useEffect, useMemo, useState } from 'react'
 import { BrowserRouter, NavLink, Navigate, Route, Routes } from 'react-router-dom'
+import ConnectWallet from './components/ConnectWallet'
 import { ThemeMode, ThemeToggle } from './components/ThemeToggle'
 import { Badge } from './components/ui/badge'
-import { getAlgodConfigFromViteEnvironment, getKmdConfigFromViteEnvironment } from './utils/network/getAlgoClientConfigs'
 import DemoPage from './pages/DemoPage'
 import LandingPage from './pages/LandingPage'
+import { ellipseAddress } from './utils/ellipseAddress'
+import { getAlgodConfigFromViteEnvironment, getKmdConfigFromViteEnvironment } from './utils/network/getAlgoClientConfigs'
 
 const THEME_STORAGE_KEY = 'vibecheck-theme'
 
@@ -71,6 +74,8 @@ export default function App() {
     localStorage.setItem(THEME_STORAGE_KEY, theme)
   }, [theme])
 
+  const [openWalletModal, setOpenWalletModal] = useState<boolean>(false)
+
   return (
     <SnackbarProvider maxSnack={3}>
       <WalletProvider manager={walletManager}>
@@ -82,13 +87,14 @@ export default function App() {
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <Badge variant="outline">Vibecheck</Badge>
-                    <Badge variant="secondary">Neo Industrial UI</Badge>
+                    <Badge variant="secondary">Algorand</Badge>
                   </div>
                   <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Algorand trust graph intelligence</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <NavItem to="/">Landing</NavItem>
                   <NavItem to="/demo">Demo</NavItem>
+                  <WalletNavButton onClick={() => setOpenWalletModal(true)} />
                   <ThemeToggle theme={theme} onToggle={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} />
                 </div>
               </div>
@@ -101,6 +107,8 @@ export default function App() {
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </main>
+
+            <ConnectWallet openModal={openWalletModal} closeModal={() => setOpenWalletModal(false)} />
           </div>
         </BrowserRouter>
       </WalletProvider>
@@ -126,5 +134,25 @@ const NavItem = ({ to, children }: NavItemProps) => {
     >
       {children}
     </NavLink>
+  )
+}
+
+interface WalletNavButtonProps {
+  onClick: () => void
+}
+
+const WalletNavButton = ({ onClick }: WalletNavButtonProps) => {
+  const { activeAddress } = useWallet()
+
+  return (
+    <button
+      type="button"
+      data-test-id="connect-wallet"
+      onClick={onClick}
+      className="inline-flex h-10 items-center gap-2 border-2 border-border bg-card px-4 text-xs font-semibold uppercase tracking-[0.12em] text-foreground transition-colors hover:bg-secondary"
+    >
+      <Wallet className="h-4 w-4" />
+      <span>{activeAddress ? ellipseAddress(activeAddress, 5) : 'Connect Wallet'}</span>
+    </button>
   )
 }
