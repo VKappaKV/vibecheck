@@ -1,6 +1,6 @@
 import { AlgorandClient } from '@algorandfoundation/algokit-utils'
-import { isValidAddress } from 'algosdk'
 import { useWallet } from '@txnlab/use-wallet-react'
+import { isValidAddress } from 'algosdk'
 import { useSnackbar } from 'notistack'
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
@@ -375,13 +375,17 @@ const AppCalls = () => {
 
       <CardContent className="space-y-4">
         <div className="grid gap-3 rounded-sm border-2 border-border bg-background/70 p-3">
-          <div className="flex flex-wrap gap-2">
-            <Button variant={profileSource === 'sample' ? 'default' : 'outline'} onClick={() => setProfileSource('sample')}>
-              Sample profiles
-            </Button>
-            <Button variant={profileSource === 'chain' ? 'default' : 'outline'} onClick={() => setProfileSource('chain')}>
-              On-chain profiles
-            </Button>
+          <div className="flex w-full justify-between">
+            <div className="flex gap-2">
+              <Button variant={profileSource === 'sample' ? 'default' : 'outline'} onClick={() => setProfileSource('sample')}>
+                Sample profiles
+              </Button>
+
+              <Button variant={profileSource === 'chain' ? 'default' : 'outline'} onClick={() => setProfileSource('chain')}>
+                On-chain profiles
+              </Button>
+            </div>
+
             <Button variant="outline" onClick={copyShareLink}>
               Copy share URL
             </Button>
