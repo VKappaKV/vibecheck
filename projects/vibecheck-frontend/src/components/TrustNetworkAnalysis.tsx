@@ -1,4 +1,6 @@
 import { HelpCircle } from 'lucide-react'
+import { useMemo } from 'react'
+import { ellipseAddress } from '../utils/ellipseAddress'
 import { TrustNetworkAnalysis as TrustNetworkAnalysisData, TrustScoreOptions } from '../utils/trustScores'
 import { Badge } from './ui/badge'
 import { Button } from './ui/button'
@@ -122,6 +124,8 @@ export function TrustNetworkAnalysis({
               <Metric title="Contributing nodes" value={analysis.contributions.length.toString()} />
             </div>
 
+            <NetworkGraph analysis={analysis} />
+
             <div className="space-y-2">
               <p className="text-xs uppercase tracking-wide text-muted-foreground">Hop breakdown</p>
               <div className="space-y-2">
@@ -149,10 +153,12 @@ export function TrustNetworkAnalysis({
                 {analysis.contributions.slice(0, 6).map((item) => (
                   <div key={`${item.account}-${item.depth}`} className="rounded-sm border border-border bg-card px-3 py-2">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-sm font-medium">{item.account}</span>
+                      <span className="text-sm font-medium">{ellipseAddress(item.account, 8)}</span>
                       <Badge variant="secondary">+{item.contribution.toFixed(3)}</Badge>
                     </div>
-                    <p className="mt-1 text-xs text-muted-foreground">Path: {item.path.join(' -> ')}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Path: {item.path.map((value) => ellipseAddress(value, 5)).join(' -> ')}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -174,6 +180,97 @@ const Metric = ({ title, value }: MetricProps) => {
     <div className="rounded-sm border border-border bg-card px-3 py-2">
       <p className="text-xs uppercase tracking-wide text-muted-foreground">{title}</p>
       <p className="text-lg font-semibold text-foreground">{value}</p>
+    </div>
+  )
+}
+
+interface NetworkGraphProps {
+  analysis: TrustNetworkAnalysisData
+}
+
+const NetworkGraph = ({ analysis }: NetworkGraphProps) => {
+  const graph = useMemo(() => {
+    const width = 820
+    const height = 280
+    const paddingX = 30
+    const paddingY = 30
+    const maxDepth = Math.max(analysis.maxVisitedDepth, 1)
+
+    const grouped = new Map<number, string[]>()
+    for (const account of analysis.allVisitedAccounts) {
+      const depth = analysis.depthByAccount[account] ?? 0
+      const list = grouped.get(depth) ?? []
+      list.push(account)
+      grouped.set(depth, list)
+    }
+
+    const positions = new Map<string, { x: number; y: number }>()
+    for (const [depth, accounts] of grouped.entries()) {
+      accounts.sort()
+      const x = paddingX + (depth / maxDepth) * (width - 2 * paddingX)
+      const rowHeight = (height - 2 * paddingY) / Math.max(accounts.length, 1)
+      accounts.forEach((account, index) => {
+        positions.set(account, {
+          x,
+          y: paddingY + rowHeight * index + rowHeight / 2,
+        })
+      })
+    }
+
+    const contributorSet = new Set(analysis.contributions.map((item) => item.account))
+
+    return {
+      width,
+      height,
+      positions,
+      contributorSet,
+    }
+  }, [analysis])
+
+  return (
+    <div className="space-y-2 rounded-sm border border-border bg-card p-3">
+      <p className="text-xs uppercase tracking-wide text-muted-foreground">Network map</p>
+      <svg viewBox={`0 0 ${graph.width} ${graph.height}`} className="h-[280px] w-full rounded-sm bg-background/70">
+        {analysis.edges.map((edge) => {
+          const from = graph.positions.get(edge.from)
+          const to = graph.positions.get(edge.to)
+          if (!from || !to) return null
+
+          return (
+            <line
+              key={`${edge.from}-${edge.to}`}
+              x1={from.x}
+              y1={from.y}
+              x2={to.x}
+              y2={to.y}
+              stroke="hsl(var(--border))"
+              strokeWidth={1.5}
+            />
+          )
+        })}
+
+        {analysis.allVisitedAccounts.map((account) => {
+          const point = graph.positions.get(account)
+          if (!point) return null
+
+          const isContributor = graph.contributorSet.has(account)
+
+          return (
+            <g key={account} transform={`translate(${point.x}, ${point.y})`}>
+              <circle
+                r={12}
+                fill={isContributor ? 'hsl(var(--primary))' : 'hsl(var(--card))'}
+                stroke="hsl(var(--border))"
+                strokeWidth={2}
+              />
+              <text x={16} y={4} fill="hsl(var(--foreground))" fontSize={12} fontWeight={600}>
+                {ellipseAddress(account, 4)}
+              </text>
+            </g>
+          )
+        })}
+      </svg>
+      <p className="text-xs text-muted-foreground">Highlighted nodes contribute directly to the selected target score.</p>
     </div>
   )
 }

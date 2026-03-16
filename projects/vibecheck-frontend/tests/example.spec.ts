@@ -13,12 +13,11 @@ test('has title', async ({ page }) => {
   await expect(page).toHaveTitle('Vibecheck Trust Graph')
 })
 
-test('get started link', async ({ page }) => {
-  await page.goto('http://localhost:5173/demo')
-  await expect(page.getByTestId('getting-started')).toHaveText('Getting started')
+test('landing has demo CTA', async ({ page }) => {
+  await expect(page.getByTestId('open-demo')).toHaveText('Open Demo')
 })
 
-test('authentication and dummy payment transaction', async ({ page }) => {
+test('authentication and trust score workspace', async ({ page }) => {
   await page.goto('http://localhost:5173/demo')
   page.on('dialog', async (dialog) => {
     dialog.message() === 'KMD password' ? await dialog.accept() : await dialog.dismiss()
@@ -29,14 +28,6 @@ test('authentication and dummy payment transaction', async ({ page }) => {
   await page.getByTestId('kmd-connect').click()
   await page.getByTestId('close-wallet-modal').click()
 
-  // 2. Must be able to send a dummy payment transaction
-  await page.getByTestId('transactions-demo').click()
-
-  await page.getByTestId('receiver-address').fill(localnet.context.testAccount.toString())
-  await page.getByTestId('send-algo').click()
-
-  // 3. Must be able to see a notification that the transaction was sent
-  const notification = await page.getByText('Transaction sent:')
-  await notification.waitFor()
-  expect(notification).toBeTruthy()
+  // 2. Trust score workspace should already be visible without extra click
+  await expect(page.getByText('Trust score demo for APPs and ASAs')).toBeVisible()
 })
