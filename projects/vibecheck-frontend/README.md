@@ -110,7 +110,7 @@ This project makes use of React and Tailwind to provider a base project configur
 - [AlgoKit Utils](https://github.com/algorandfoundation/algokit-utils-ts) - Various TypeScript utilities to simplify interactions with Algorand and AlgoKit.
 - [React](https://reactjs.org/) - A JavaScript library for building user interfaces.
 - [Tailwind CSS](https://tailwindcss.com/) - A utility-first CSS framework for rapidly building custom designs.
-- [daisyUI](https://daisyui.com/) - A component library for Tailwind CSS.
+- [shadcn/ui](https://ui.shadcn.com/) - A component system built on Tailwind CSS and Radix UI primitives.
 - [use-wallet](https://github.com/txnlab/use-wallet) - A React hook for connecting to an Algorand wallet providers.
 - [npm](https://www.npmjs.com/): Node.js package manager
 - [jest](https://jestjs.io/): JavaScript testing framework

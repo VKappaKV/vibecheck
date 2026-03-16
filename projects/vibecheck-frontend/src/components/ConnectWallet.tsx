@@ -1,5 +1,8 @@
 import { useWallet, Wallet, WalletId } from '@txnlab/use-wallet-react'
 import Account from './Account'
+import { Button } from './ui/button'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog'
+import { Separator } from './ui/separator'
 
 interface ConnectWalletInterface {
   openModal: boolean
@@ -12,53 +15,43 @@ const ConnectWallet = ({ openModal, closeModal }: ConnectWalletInterface) => {
   const isKmd = (wallet: Wallet) => wallet.id === WalletId.KMD
 
   return (
-    <dialog id="connect_wallet_modal" className={`modal ${openModal ? 'modal-open' : ''}`}>
-      <form method="dialog" className="modal-box">
-        <h3 className="font-bold text-2xl">Select wallet provider</h3>
+    <Dialog open={openModal} onOpenChange={(open) => !open && closeModal()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Select wallet provider</DialogTitle>
+          <DialogDescription>Connect a wallet to run payment and trust score demos.</DialogDescription>
+        </DialogHeader>
 
-        <div className="grid m-2 pt-5">
+        <div className="grid gap-3 pt-2">
           {activeAddress && (
             <>
               <Account />
-              <div className="divider" />
+              <Separator />
             </>
           )}
 
           {!activeAddress &&
             wallets?.map((wallet) => (
-              <button
+              <Button
                 data-test-id={`${wallet.id}-connect`}
-                className="btn border-teal-800 border-1  m-2"
+                variant="outline"
+                className="justify-start gap-3"
                 key={`provider-${wallet.id}`}
-                onClick={() => {
-                  return wallet.connect()
-                }}
+                onClick={() => wallet.connect()}
               >
-                {!isKmd(wallet) && (
-                  <img
-                    alt={`wallet_icon_${wallet.id}`}
-                    src={wallet.metadata.icon}
-                    style={{ objectFit: 'contain', width: '30px', height: 'auto' }}
-                  />
-                )}
+                {!isKmd(wallet) && <img alt={`wallet_icon_${wallet.id}`} src={wallet.metadata.icon} className="h-6 w-6 object-contain" />}
                 <span>{isKmd(wallet) ? 'LocalNet Wallet' : wallet.metadata.name}</span>
-              </button>
+              </Button>
             ))}
         </div>
 
-        <div className="modal-action ">
-          <button
-            data-test-id="close-wallet-modal"
-            className="btn"
-            onClick={() => {
-              closeModal()
-            }}
-          >
+        <DialogFooter>
+          <Button data-test-id="close-wallet-modal" variant="secondary" onClick={closeModal}>
             Close
-          </button>
+          </Button>
           {activeAddress && (
-            <button
-              className="btn btn-warning"
+            <Button
+              variant="destructive"
               data-test-id="logout"
               onClick={async () => {
                 if (wallets) {
@@ -66,9 +59,6 @@ const ConnectWallet = ({ openModal, closeModal }: ConnectWalletInterface) => {
                   if (activeWallet) {
                     await activeWallet.disconnect()
                   } else {
-                    // Required for logout/cleanup of inactive providers
-                    // For instance, when you login to localnet wallet and switch network
-                    // to testnet/mainnet or vice verse.
                     localStorage.removeItem('@txnlab/use-wallet:v3')
                     window.location.reload()
                   }
@@ -76,11 +66,11 @@ const ConnectWallet = ({ openModal, closeModal }: ConnectWalletInterface) => {
               }}
             >
               Logout
-            </button>
+            </Button>
           )}
-        </div>
-      </form>
-    </dialog>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 export default ConnectWallet

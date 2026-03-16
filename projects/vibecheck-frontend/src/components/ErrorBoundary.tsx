@@ -24,11 +24,11 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
     if (this.state.hasError) {
       // You can render any custom fallback UI
       return (
-        <div className="hero min-h-screen bg-teal-400">
-          <div className="hero-content text-center rounded-lg p-6 max-w-md bg-white mx-auto">
-            <div className="max-w-md">
-              <h1 className="text-4xl">Error occured</h1>
-              <p className="py-6">
+        <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_#dff4ff,_transparent_45%),linear-gradient(180deg,_#f8fbff_0%,_#eef4fa_100%)] px-4 py-12">
+          <div className="mx-auto max-w-2xl rounded-lg border border-border bg-card p-6 shadow-md">
+            <div className="max-w-xl">
+              <h1 className="text-3xl font-semibold text-foreground">Error occurred</h1>
+              <p className="pt-4 text-sm text-muted-foreground">
                 {this.state.error?.message.includes('Attempt to get default algod configuration')
                   ? 'Please make sure to set up your environment variables correctly. Create a .env file based on .env.template and fill in the required values. This controls the network and credentials for connections with Algod and Indexer.'
                   : this.state.error?.message}

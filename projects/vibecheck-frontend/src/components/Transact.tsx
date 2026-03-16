@@ -3,6 +3,9 @@ import { useWallet } from '@txnlab/use-wallet-react'
 import { useSnackbar } from 'notistack'
 import { useState } from 'react'
 import { getAlgodConfigFromViteEnvironment } from '../utils/network/getAlgoClientConfigs'
+import { Button } from './ui/button'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog'
+import { Input } from './ui/input'
 
 interface TransactInterface {
   openModal: boolean
@@ -25,6 +28,7 @@ const Transact = ({ openModal, setModalState }: TransactInterface) => {
 
     if (!transactionSigner || !activeAddress) {
       enqueueSnackbar('Please connect wallet first', { variant: 'warning' })
+      setLoading(false)
       return
     }
 
@@ -46,34 +50,31 @@ const Transact = ({ openModal, setModalState }: TransactInterface) => {
   }
 
   return (
-    <dialog id="transact_modal" className={`modal ${openModal ? 'modal-open' : ''} bg-slate-200`}>
-      <form method="dialog" className="modal-box">
-        <h3 className="font-bold text-lg">Send payment transaction</h3>
-        <br />
-        <input
+    <Dialog open={openModal} onOpenChange={setModalState}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Send payment transaction</DialogTitle>
+          <DialogDescription>Send a 1 ALGO demo payment to verify signer and network setup.</DialogDescription>
+        </DialogHeader>
+        <Input
           type="text"
           data-test-id="receiver-address"
           placeholder="Provide wallet address"
-          className="input input-bordered w-full"
           value={receiverAddress}
           onChange={(e) => {
             setReceiverAddress(e.target.value)
           }}
         />
-        <div className="modal-action ">
-          <button className="btn" onClick={() => setModalState(!openModal)}>
+        <DialogFooter>
+          <Button variant="secondary" onClick={() => setModalState(!openModal)}>
             Close
-          </button>
-          <button
-            data-test-id="send-algo"
-            className={`btn ${receiverAddress.length === 58 ? '' : 'btn-disabled'} lo`}
-            onClick={handleSubmitAlgo}
-          >
-            {loading ? <span className="loading loading-spinner" /> : 'Send 1 Algo'}
-          </button>
-        </div>
-      </form>
-    </dialog>
+          </Button>
+          <Button data-test-id="send-algo" onClick={handleSubmitAlgo} disabled={receiverAddress.length !== 58 || loading}>
+            {loading ? 'Sending...' : 'Send 1 Algo'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 
