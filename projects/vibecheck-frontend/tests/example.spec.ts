@@ -10,14 +10,16 @@ test.beforeEach(async ({ page }) => {
 
 test('has title', async ({ page }) => {
   // Expect a title "to contain" a substring.
-  await expect(page).toHaveTitle('AlgoKit React Template')
+  await expect(page).toHaveTitle('Vibecheck Trust Graph')
 })
 
 test('get started link', async ({ page }) => {
+  await page.goto('http://localhost:5173/demo')
   await expect(page.getByTestId('getting-started')).toHaveText('Getting started')
 })
 
 test('authentication and dummy payment transaction', async ({ page }) => {
+  await page.goto('http://localhost:5173/demo')
   page.on('dialog', async (dialog) => {
     dialog.message() === 'KMD password' ? await dialog.accept() : await dialog.dismiss()
   })

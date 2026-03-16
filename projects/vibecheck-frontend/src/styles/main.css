@@ -1,35 +1,64 @@
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 208 50% 98%;
-    --foreground: 216 34% 17%;
+    --background: 210 18% 94%;
+    --foreground: 220 28% 16%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 216 34% 17%;
+    --card: 210 16% 98%;
+    --card-foreground: 220 28% 16%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 216 34% 17%;
+    --popover: 210 20% 98%;
+    --popover-foreground: 220 28% 16%;
 
-    --primary: 201 87% 38%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 191 100% 34%;
+    --primary-foreground: 210 40% 98%;
 
-    --secondary: 210 42% 94%;
-    --secondary-foreground: 216 34% 17%;
+    --secondary: 210 18% 88%;
+    --secondary-foreground: 220 28% 16%;
 
-    --muted: 210 35% 93%;
-    --muted-foreground: 215 16% 45%;
+    --muted: 210 18% 90%;
+    --muted-foreground: 220 12% 34%;
 
-    --accent: 191 81% 91%;
-    --accent-foreground: 216 34% 17%;
+    --accent: 190 60% 85%;
+    --accent-foreground: 220 28% 16%;
 
-    --border: 214 32% 88%;
-    --input: 214 32% 88%;
-    --ring: 201 87% 38%;
+    --border: 215 22% 66%;
+    --input: 215 22% 66%;
+    --ring: 191 100% 34%;
 
-    --radius: 0.6rem;
+    --radius: 0.2rem;
+  }
+
+  .dark {
+    --background: 225 17% 10%;
+    --foreground: 210 30% 92%;
+
+    --card: 225 14% 13%;
+    --card-foreground: 210 30% 92%;
+
+    --popover: 225 14% 13%;
+    --popover-foreground: 210 30% 92%;
+
+    --primary: 188 93% 55%;
+    --primary-foreground: 225 17% 10%;
+
+    --secondary: 224 13% 20%;
+    --secondary-foreground: 210 30% 92%;
+
+    --muted: 224 13% 18%;
+    --muted-foreground: 214 12% 69%;
+
+    --accent: 219 24% 24%;
+    --accent-foreground: 210 30% 92%;
+
+    --border: 220 13% 33%;
+    --input: 220 13% 33%;
+    --ring: 188 93% 55%;
   }
 
   * {
@@ -38,5 +67,26 @@
 
   body {
     @apply bg-background text-foreground antialiased;
+    font-family: 'Rajdhani', sans-serif;
+    letter-spacing: 0.01em;
+  }
+
+  code,
+  pre,
+  .font-mono {
+    font-family: 'IBM Plex Mono', monospace;
+  }
+}
+
+@layer components {
+  .neo-panel {
+    @apply border-2 border-border bg-card/95 shadow-[6px_6px_0_0_hsl(var(--border))];
+  }
+
+  .neo-grid-overlay {
+    background-image: linear-gradient(to right, hsl(var(--border) / 0.2) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--border) / 0.2) 1px, transparent 1px);
+    background-size: 28px 28px;
+    mask-image: radial-gradient(circle at center, black 20%, transparent 80%);
   }
 }
