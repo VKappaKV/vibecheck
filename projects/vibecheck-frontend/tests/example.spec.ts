@@ -1,10 +1,6 @@
-import { algorandFixture } from '@algorandfoundation/algokit-utils/testing'
 import { expect, test } from '@playwright/test'
 
-const localnet = algorandFixture()
-
 test.beforeEach(async ({ page }) => {
-  await localnet.newScope()
   await page.goto('http://localhost:5173/')
 })
 
@@ -17,15 +13,13 @@ test('landing has demo CTA', async ({ page }) => {
   await expect(page.getByTestId('open-demo')).toHaveText('Open Demo')
 })
 
-test('authentication and trust score workspace', async ({ page }) => {
+test('wallet modal lists testnet wallets and trust score workspace is visible', async ({ page }) => {
   await page.goto('http://localhost:5173/demo')
-  page.on('dialog', async (dialog) => {
-    dialog.message() === 'KMD password' ? await dialog.accept() : await dialog.dismiss()
-  })
 
-  // 1. Must be able to connect to a KMD wallet provider
+  // 1. Wallet modal should expose the configured wallet providers
   await page.getByTestId('connect-wallet').click()
-  await page.getByTestId('kmd-connect').click()
+  await expect(page.getByTestId('pera-connect')).toBeVisible()
+  await expect(page.getByTestId('lute-connect')).toBeVisible()
   await page.getByTestId('close-wallet-modal').click()
 
   // 2. Trust score workspace should already be visible without extra click

@@ -41,11 +41,6 @@ export default function LandingPage() {
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
-              <Button asChild variant="outline">
-                <a href="https://github.com/algorandfoundation/algokit-cli" target="_blank" rel="noreferrer">
-                  Read AlgoKit docs
-                </a>
-              </Button>
             </div>
           </div>
 
@@ -56,7 +51,7 @@ export default function LandingPage() {
             <CardContent className="space-y-2 text-sm text-muted-foreground">
               <p>- Smart contract stores trust adjacency and APP/ASA endorsements.</p>
               <p>- SDK and frontend use consistent scoring logic.</p>
-              <p>- Demo includes wallet connection, payment flow, and explainable trust analytics.</p>
+              <p>- Demo includes explainable trust analytics.</p>
             </CardContent>
           </Card>
         </div>

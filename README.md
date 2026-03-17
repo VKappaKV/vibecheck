@@ -1,6 +1,13 @@
 # vibecheck
 
-This starter full stack project has been generated using AlgoKit. See below for default getting started instructions.
+Vibecheck is an Algorand trust intelligence demo. It combines an on-chain trust profile contract with a frontend that visualizes trust relationships and computes explainable trust scores for apps and assets.
+
+This monorepo includes:
+
+- `projects/vibecheck-contracts`: Algorand TypeScript (PuyaTs) smart contracts, generated clients, and SDK utilities for profile setup, trust updates, and scoring.
+- `projects/vibecheck-frontend`: React application with wallet connectivity and demo flows for exploring trust rankings and network propagation.
+
+The workspace was bootstrapped with AlgoKit and then extended with custom trust graph logic.
 
 ## Setup
 
@@ -8,11 +15,13 @@ This starter full stack project has been generated using AlgoKit. See below for 
 1. Clone this repository to your local machine.
 2. Ensure [Docker](https://www.docker.com/) is installed and operational. Then, install `AlgoKit` following this [guide](https://github.com/algorandfoundation/algokit-cli#install).
 3. Run `algokit project bootstrap all` in the project directory. This command sets up your environment by installing necessary dependencies, setting up a Python virtual environment, and preparing your `.env` file.
-4. In the case of a smart contract project, execute `algokit generate env-file -a target_network localnet` from the `vibecheck-contracts` directory to create a `.env.localnet` file with default configuration for `localnet`.
+4. In the case of a smart contract project, execute `algokit generate env-file -a target_network <network>` from the `vibecheck-contracts` directory to create a network-specific env file (for example, `.env.localnet` or `.env.testnet`).
 5. To build your project, execute `algokit project run build`. This compiles your project and prepares it for running.
 6. For project-specific instructions, refer to the READMEs of the child projects:
    - Smart Contracts: [vibecheck-contracts](projects/vibecheck-contracts/README.md)
    - Frontend Application: [vibecheck-frontend](projects/vibecheck-frontend/README.md)
+
+> The frontend is configured to use TestNet by default and includes Pera and Lute wallet connectivity out of the box.
 
 > This project is structured as a monorepo, refer to the [documentation](https://github.com/algorandfoundation/algokit-cli/blob/main/docs/features/project/run.md) to learn more about custom command orchestration via `algokit project run`.
 
