@@ -29,7 +29,7 @@ const Home: React.FC<HomeProps> = () => {
         <CardHeader>
           <CardTitle className="text-lg uppercase tracking-wide">Demo tips</CardTitle>
         </CardHeader>
-        <CardContent className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-3">
+        <CardContent className="grid gap-2 text-sm text-muted-foreground md:grid-cols-3">
           <p>1) Use the navbar wallet button to connect or disconnect.</p>
           <p>2) In on-chain mode, initialize your profile, then add/remove APP, ASA, and peer trust entries.</p>
           <p>3) Share your peer invite QR so others can add your address with one scan.</p>
