@@ -4,11 +4,8 @@ import { Vibecheck } from './contract.algo'
 
 describe('Vibecheck contract', () => {
   const ctx = new TestExecutionContext()
-  it('Logs the returned value when sayHello is called', () => {
+  it('creates the contract instance', () => {
     const contract = ctx.contract.create(Vibecheck)
-
-    const result = contract.hello('Sally')
-
-    expect(result).toBe('Hello, Sally')
+    expect(contract).toBeDefined()
   })
 })

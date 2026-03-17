@@ -33,11 +33,17 @@ export async function deploy() {
     })
   }
 
-  const method = 'hello'
-  const response = await appClient.send.hello({
-    args: { name: 'world' },
+  await appClient.send.addTrustedApps({
+    args: { apps: [1n] },
   })
+
+  const response = await appClient.send.getTrustedApp({
+    args: { account: deployer.addr.toString() },
+  })
+
+  const trustedApps = (response.return ?? []).map((appId) => appId.toString())
+
   console.log(
-    `Called ${method} on ${appClient.appClient.appName} (${appClient.appClient.appId}) with name = world, received: ${response.return}`,
+    `Initialized ${appClient.appClient.appName} (${appClient.appClient.appId}) and added trusted app IDs: [${trustedApps.join(', ')}]`,
   )
 }

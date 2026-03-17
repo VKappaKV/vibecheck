@@ -26,14 +26,14 @@ async function runDemo() {
 
   await sdk.addTrust(appClient, {
     sender: deployerAddress,
-    appId: 42n,
-    assetId: 31566704n,
-    peer: reviewerAddress,
+    appIds: [42n],
+    assetIds: [31566704n],
+    peers: [reviewerAddress],
   })
 
   await sdk.addTrust(reviewerClient, {
     sender: reviewerAddress,
-    appId: 42n,
+    appIds: [42n],
   })
 
   const profiles = [
