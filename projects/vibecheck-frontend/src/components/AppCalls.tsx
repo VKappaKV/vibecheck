@@ -1,9 +1,9 @@
-import { TrustNetworkAnalysis } from './TrustNetworkAnalysis'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
 import { LiveDataControls } from './trust-demo/LiveDataControls'
 import { ProfileManagementPanel } from './trust-demo/ProfileManagementPanel'
 import { ScoreTabsPanel } from './trust-demo/ScoreTabsPanel'
 import { useTrustDemo } from './trust-demo/useTrustDemo'
+import { TrustNetworkAnalysis } from './TrustNetworkAnalysis'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
 
 const AppCalls = () => {
   const demo = useTrustDemo()
