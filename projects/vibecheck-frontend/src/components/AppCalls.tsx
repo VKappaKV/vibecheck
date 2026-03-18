@@ -29,7 +29,6 @@ const AppCalls = () => {
           selectedAssetId={demo.selectedAssetId}
           onSelectAssetId={demo.setSelectedAssetId}
           onChainAppId={demo.onChainAppId}
-          onOnChainAppIdChange={demo.setOnChainAppId}
           isLoadingOnChainProfiles={demo.isLoadingOnChainProfiles}
           onRefreshProfiles={() => void demo.loadOnChainProfiles()}
           onCopyShareUrl={() => void demo.copyShareLink()}

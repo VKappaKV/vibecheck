@@ -1,122 +1,68 @@
 # vibecheck-frontend
 
-This starter React project has been generated using AlgoKit. See below for default getting started instructions.
+React frontend for the Vibecheck trust graph demo.
 
-# Setup
+## What this app does
 
-### Initial Setup
+- Connects Algorand wallets (`Pera`, `Lute`, and `KMD` on LocalNet)
+- Loads trust profiles from the deployed Vibecheck smart contract
+- Lets users initialize and mutate trust lists (peer, ASA, APP)
+- Computes and displays explainable trust scores for APP and ASA targets
+- Generates a peer invite link with QR modal sharing
 
-#### 1. Clone the Repository
-Start by cloning this repository to your local machine.
+## Key files
 
-#### 2. Install Pre-requisites
-Ensure the following pre-requisites are installed and properly configured:
+- App shell and routing: `src/App.tsx`
+- Pages: `src/pages/HomePage.tsx`, `src/pages/DemoPage.tsx`
+- Demo logic/hooks: `src/components/trust-demo/`
+- Generated contract client: `src/contracts/Vibecheck.ts`
 
-- **npm**: Node package manager. Install from [Node.js Installation Guide](https://nodejs.org/en/download/). Verify with `npm -v` to see version `18.12`+.
-- **AlgoKit CLI**: Essential for project setup and operations. Install the latest version from [AlgoKit CLI Installation Guide](https://github.com/algorandfoundation/algokit-cli#install). Verify installation with `algokit --version`, expecting `2.0.0` or later.
+## Prerequisites
 
-#### 3. Bootstrap Your Local Environment
-Run the following commands within the project folder:
+- Node.js `20+` (Node `22+` recommended for workspace consistency)
+- npm `9+`
+- AlgoKit CLI `2+` (used by `generate:app-clients`)
 
-- **Install Project Dependencies**: With `algokit project bootstrap all`, ensure all dependencies are ready.
+## Environment setup
 
-### Development Workflow
+Use `projects/vibecheck-frontend/.env.template` as reference and configure `projects/vibecheck-frontend/.env`.
 
-#### Terminal
-Directly manage and interact with your project using AlgoKit commands:
+Required values:
 
-1. **Build Contracts**: `algokit project run build` builds react web app and links with smart contracts in workspace, if any.
-2. Remaining set of command for linting, testing and deployment can be found in respective [package.json](./package.json) file and [.algokit.toml](./.algokit.toml) files.
+- `VITE_ENVIRONMENT` (`local`, `testnet`, or `production`)
+- `VITE_VIBECHECK_APP_ID` (deployed contract app id used by demo page)
+- Algod/indexer settings for your target network (`VITE_ALGOD_*`, `VITE_INDEXER_*`)
 
-#### VS Code
-For a seamless experience with breakpoint debugging and other features:
+Notes:
 
-1. **Open Project**: In VS Code, open the repository root.
-2. **Install Extensions**: Follow prompts to install recommended extensions.
-3. **Debugging**:
-   - Use `F5` to start debugging.
-   - **Windows Users**: Select the Python interpreter at `./.venv/Scripts/python.exe` via `Ctrl/Cmd + Shift + P` > `Python: Select Interpreter` before the first run.
+- Default template is set to TestNet endpoints.
+- LocalNet wallet support requires KMD env vars (`VITE_KMD_*`).
 
-#### Other IDEs
-While primarily optimized for VS Code, Jetbrains WebStorm has base support for this project:
+## Development
 
-1. **Open Project**: In your JetBrains IDE, open the repository root.
-2. **Automatic Setup**: The IDE should configure the Python interpreter and virtual environment.
-3. **Debugging**: Use `Shift+F10` or `Ctrl+R` to start debugging. Note: Windows users may encounter issues with pre-launch tasks due to a known bug. See [JetBrains forums](https://youtrack.jetbrains.com/issue/IDEA-277486/Shell-script-configuration-cannot-run-as-before-launch-task) for workarounds.
+From `projects/vibecheck-frontend`:
 
-## AlgoKit Workspaces and Project Management
-This project supports both standalone and monorepo setups through AlgoKit workspaces. Leverage [`algokit project run`](https://github.com/algorandfoundation/algokit-cli/blob/main/docs/features/project/run.md) commands for efficient monorepo project orchestration and management across multiple projects within a workspace.
+```bash
+npm install
+npm run dev
+```
 
-> Please note, the frontend is configured to run against Algorand TestNet by default. If you want to run against LocalNet or MainNet, update the active block in [`.env`](.env) based on [`.env.template`](.env.template).
+`npm run dev` automatically links generated app clients via `algokit project link --all` before starting Vite.
 
-### Continuous Integration
+## Commands
 
-This project uses [GitHub Actions](https://docs.github.com/en/actions/learn-github-actions/understanding-github-actions) to define CI workflows, which are located in the [.github/workflows](`../../.github/workflows`) folder.
+- `npm run dev`: link clients and start local dev server
+- `npm run build`: link clients, type-check, and build production bundle
+- `npm run lint`: run ESLint
+- `npm run test`: run Jest tests
+- `npm run playwright:test`: run Playwright browser tests
+- `npm run preview`: preview production build
 
-For pull requests and pushes to `main` branch against this repository the following checks are automatically performed by GitHub Actions:
+## Contract integration flow
 
-- `install`: Installs dependencies using `npm`
-- `lint`: Lints the codebase using `ESLint`
-- `build`: Builds the codebase using `vite`
+1. Deploy/update contracts in `projects/vibecheck-contracts`.
+2. In this frontend project, run `npm run generate:app-clients` (or `npm run dev` / `npm run build`, which already does it).
+3. Update `VITE_VIBECHECK_APP_ID` to the deployed app id.
+4. Run the app and open `/demo`.
 
-> Please note, if you instantiated the project via `algokit init` without explicitly specifying the `--no-workspace` flag, we will automatically attempt to move the contents of the `.github` folder to the root of the workspace.
-
-### Continuous Deployment
-
-The project template provides base Github Actions workflows for continuous deployment to [Netlify](https://www.netlify.com/) or [Vercel](https://vercel.com/). These workflows are located in the [`.github/workflows`](./.github/workflows) folder.
-
-**Please note**: when configuring the github repository for the first time. Depending on selected provider you will need to set the provider secrets in the repository settings. Default setup provided by the template allows you to manage the secrets via environment variables and secrets on your github repository.
-
-
-#### Setting up environment variables and secrets for webapp deployment
-
-For Vercel:
-1. Retrieve your [Vercel Access Token](https://vercel.com/support/articles/how-do-i-use-a-vercel-api-access-token)
-2. Install the [Vercel CLI](https://vercel.com/cli) and run `vercel login`
-3. Inside your folder, run `vercel link` to create a new Vercel project
-4. Inside the generated `.vercel` folder, save the `projectId` and `orgId` from the `project.json`
-5. Inside GitHub, add `VERCEL_TOKEN`, `VERCEL_ORG_ID`, and `VERCEL_PROJECT_ID` as [secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets).
-6. Create an .env file containing ENV vars for the project (pointing to testnet or mainnet), drag and drop the .env file to upload initial batch of default environment variables to your vercel project.
-7. Upon invocation, CD pipeline will pull the VITE_ prefixed environment variables, build the project and deploy to the specified environment.
-
-For Netlify:
-1. Retrieve your [Netlify Access Token](https://docs.netlify.com/cli/get-started/#obtain-a-token-in-the-netlify-ui)
-2. Inside your folder run `netlify login`
-3. Inside your folder run `netlify sites:create` to create a new site, obtain NETLIFY_SITE_ID from the output
-4. Inside GitHub, add `NETLIFY_AUTH_TOKEN` and `NETLIFY_SITE_ID` as [secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets).
-5. Define the VITE_ prefixed environment variables in netlify environment variables under site settings.
-6. Upon invocation, CD pipeline will build the project and deploy to the specified environment.
-
-> If you prefer alternative deployment methods, you can modify the relevant workflow files from the [`.github/workflows`](./.github/workflows) folder or modify deploy scripts in `.algokit.toml`.
-
-
-# Algorand Wallet integrations
-
-The template comes with [`use-wallet`](https://github.com/txnlab/use-wallet) integration, which provides a React hook for connecting to Algorand wallet providers. The following wallet providers are included:
-- Default (TestNet/MainNet):
-  - [Pera Wallet](https://perawallet.app).
-  - [Lute Wallet](https://lute.app).
-- LocalNet (when enabled in `.env`):
-  - [KMD/Local Wallet](https://github.com/TxnLab/use-wallet#kmd-algorand-key-management-daemon) - Algorand's Key Management Daemon (KMD) is a service that manages Algorand private keys and signs transactions. Works best with AlgoKit LocalNet and allows you to easily test and interact with your dApps locally.
-
-Refer to official [`use-wallet`](https://github.com/txnlab/use-wallet) documentation for detailed guidelines on how to integrate with other wallet providers (such as WalletConnect v2). Too see implementation details on the use wallet hook and initialization of extra wallet providers refer to [`App.tsx`](./src/App.tsx).
-
-# Tools
-
-This project makes use of React and Tailwind to provider a base project configuration to develop frontends for your Algorand dApps and interactions with smart contracts. The following tools are in use:
-
-- [AlgoKit Utils](https://github.com/algorandfoundation/algokit-utils-ts) - Various TypeScript utilities to simplify interactions with Algorand and AlgoKit.
-- [React](https://reactjs.org/) - A JavaScript library for building user interfaces.
-- [Tailwind CSS](https://tailwindcss.com/) - A utility-first CSS framework for rapidly building custom designs.
-- [shadcn/ui](https://ui.shadcn.com/) - A component system built on Tailwind CSS and Radix UI primitives.
-- [use-wallet](https://github.com/txnlab/use-wallet) - A React hook for connecting to an Algorand wallet providers.
-- [npm](https://www.npmjs.com/): Node.js package manager
-- [jest](https://jestjs.io/): JavaScript testing framework
-- [playwright](https://playwright.dev/): Browser automation library
-- [Prettier](https://prettier.io/): Opinionated code formatter
-- [ESLint](https://eslint.org/): Tool for identifying and reporting on patterns in JavaScript
-- Github Actions workflows for build validation
-It has also been configured to have a productive dev experience out of the box in [VS Code](https://code.visualstudio.com/), see the [.vscode](./.vscode) folder.
-# Integrating with smart contracts and application clients
-
-Refer to the detailed guidance on [integrating with smart contracts and application clients](./src/contracts/README.md). In essence, for any smart contract codebase generated with AlgoKit or other tools that produce compile contracts into ARC34 compliant app specifications, you can use the `algokit generate` command to generate TypeScript or Python typed client. Once generated simply drag and drop the generated client into `./src/contracts` and import it into your React components as you see fit.
+For more details on generated clients, see `src/contracts/README.md`.
