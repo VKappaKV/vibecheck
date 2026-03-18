@@ -6,8 +6,6 @@ import { beforeAll, beforeEach, describe, expect, test } from 'vitest'
 import { VibecheckClient, VibecheckFactory } from '../artifacts/vibecheck/VibecheckClient'
 import { TrustProfile, scoreAppTrust, scoreAssetTrust } from '../../utils/trustScoring'
 
-const ZERO_ADDRESS = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ'
-
 const asAddressString = (address: Address | string) => address.toString()
 
 describe('Vibecheck contract', () => {
@@ -78,15 +76,6 @@ describe('Vibecheck contract', () => {
     }
   }
 
-  test('says hello', async () => {
-    const { testAccount } = localnet.context
-    const { client } = await deploy(testAccount)
-
-    const result = await client.send.hello({ args: { name: 'World' } })
-
-    expect(result.return).toBe('Hello, World')
-  })
-
   test('initializes trust profile and returns empty lists', async () => {
     const { testAccount } = localnet.context
     const { client } = await deploy(testAccount)
@@ -100,7 +89,7 @@ describe('Vibecheck contract', () => {
     expect(profile.trustedPeers).toEqual([])
   })
 
-  test('adds trust edges once, then removes them', async () => {
+  test('adds trust edges once, then removes app, asa and peer independently', async () => {
     const { testAccount } = localnet.context
     const { client } = await deploy(testAccount)
 
@@ -108,34 +97,34 @@ describe('Vibecheck contract', () => {
 
     await initProfile(client, testAccount)
 
-    await client.send.add({
-      args: {
-        app: 101n,
-        asset: 202n,
-        peer: asAddressString(peerAccount.addr),
-      },
-    })
+    await client.send.addTrustedApps({ args: { apps: [101n, 101n] } })
+    await client.send.addTrustedAsas({ args: { assets: [202n, 202n] } })
+    await client.send.addTrustedPeers({ args: { peers: [asAddressString(peerAccount.addr), asAddressString(peerAccount.addr)] } })
 
-    await client.send.add({
-      args: {
-        app: 101n,
-        asset: 202n,
-        peer: asAddressString(peerAccount.addr),
-      },
-    })
+    await client.send.addTrustedApps({ args: { apps: [101n] } })
+    await client.send.addTrustedAsas({ args: { assets: [202n] } })
+    await client.send.addTrustedPeers({ args: { peers: [asAddressString(peerAccount.addr)] } })
 
     const afterAdd = await getProfile(client, testAccount, testAccount)
     expect(afterAdd.trustedApps).toEqual([101n])
     expect(afterAdd.trustedAsas).toEqual([202n])
     expect(afterAdd.trustedPeers).toEqual([asAddressString(peerAccount.addr)])
 
-    await client.send.remove({
-      args: {
-        app: 101n,
-        asset: 202n,
-        peer: asAddressString(peerAccount.addr),
-      },
-    })
+    await client.send.removeApp({ args: { app: 101n } })
+
+    const afterAppRemove = await getProfile(client, testAccount, testAccount)
+    expect(afterAppRemove.trustedApps).toEqual([])
+    expect(afterAppRemove.trustedAsas).toEqual([202n])
+    expect(afterAppRemove.trustedPeers).toEqual([asAddressString(peerAccount.addr)])
+
+    await client.send.removeAsa({ args: { asset: 202n } })
+
+    const afterAsaRemove = await getProfile(client, testAccount, testAccount)
+    expect(afterAsaRemove.trustedApps).toEqual([])
+    expect(afterAsaRemove.trustedAsas).toEqual([])
+    expect(afterAsaRemove.trustedPeers).toEqual([asAddressString(peerAccount.addr)])
+
+    await client.send.removePeer({ args: { peer: asAddressString(peerAccount.addr) } })
 
     const afterRemove = await getProfile(client, testAccount, testAccount)
     expect(afterRemove.trustedApps).toEqual([])
@@ -143,16 +132,14 @@ describe('Vibecheck contract', () => {
     expect(afterRemove.trustedPeers).toEqual([])
   })
 
-  test('rejects add when profile is not initialized', async () => {
+  test('rejects batch add when profile is not initialized', async () => {
     const { testAccount } = localnet.context
     const { client } = await deploy(testAccount)
 
     await expect(
-      client.send.add({
+      client.send.addTrustedApps({
         args: {
-          app: 1n,
-          asset: 0n,
-          peer: ZERO_ADDRESS,
+          apps: [1n],
         },
       }),
     ).rejects.toThrow()
@@ -177,21 +164,11 @@ describe('Vibecheck contract', () => {
     await initProfile(client, testAccount)
     await initProfile(peerClient, peerAccount.addr)
 
-    await client.send.add({
-      args: {
-        app: 42n,
-        asset: 31566704n,
-        peer: asAddressString(peerAccount.addr),
-      },
-    })
+    await client.send.addTrustedApps({ args: { apps: [42n] } })
+    await client.send.addTrustedAsas({ args: { assets: [31566704n] } })
+    await client.send.addTrustedPeers({ args: { peers: [asAddressString(peerAccount.addr)] } })
 
-    await peerClient.send.add({
-      args: {
-        app: 42n,
-        asset: 0n,
-        peer: ZERO_ADDRESS,
-      },
-    })
+    await peerClient.send.addTrustedApps({ args: { apps: [42n] } })
 
     const profiles = [
       await getProfile(client, testAccount, testAccount),

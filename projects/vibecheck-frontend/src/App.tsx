@@ -7,7 +7,7 @@ import ConnectWallet from './components/ConnectWallet'
 import { ThemeMode, ThemeToggle } from './components/ThemeToggle'
 import { Badge } from './components/ui/badge'
 import DemoPage from './pages/DemoPage'
-import LandingPage from './pages/LandingPage'
+import LandingPage from './pages/HomePage'
 import { ellipseAddress } from './utils/ellipseAddress'
 import { getAlgodConfigFromViteEnvironment, getKmdConfigFromViteEnvironment } from './utils/network/getAlgoClientConfigs'
 
@@ -40,7 +40,7 @@ if (import.meta.env.VITE_ALGOD_NETWORK === 'localnet') {
     },
   ]
 } else {
-  supportedWallets = [{ id: WalletId.DEFLY }, { id: WalletId.PERA }, { id: WalletId.EXODUS }]
+  supportedWallets = [{ id: WalletId.PERA }, { id: WalletId.LUTE }]
 }
 
 export default function App() {
@@ -83,7 +83,7 @@ export default function App() {
           <div className="relative min-h-screen bg-background pb-10">
             <div className="neo-grid-overlay pointer-events-none fixed inset-0 -z-10" aria-hidden="true" />
             <header className="mx-auto mt-4 w-[min(1200px,calc(100%-1.5rem))] border-2 border-border bg-card/90 px-4 py-3 backdrop-blur">
-              <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <Badge variant="outline">Vibecheck</Badge>
@@ -91,8 +91,9 @@ export default function App() {
                   </div>
                   <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Algorand trust graph intelligence</p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <NavItem to="/">Landing</NavItem>
+
+                <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center sm:justify-end">
+                  <NavItem to="/">Home</NavItem>
                   <NavItem to="/demo">Demo</NavItem>
                   <WalletNavButton onClick={() => setOpenWalletModal(true)} />
                   <ThemeToggle theme={theme} onToggle={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} />
@@ -127,7 +128,7 @@ const NavItem = ({ to, children }: NavItemProps) => {
       to={to}
       className={({ isActive }) =>
         [
-          'inline-flex h-10 items-center border-2 px-4 text-xs font-semibold uppercase tracking-[0.12em] transition-colors',
+          'inline-flex h-10 w-full items-center justify-center border-2 px-4 text-xs font-semibold uppercase tracking-[0.12em] transition-colors sm:w-auto',
           isActive ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-card text-foreground hover:bg-secondary',
         ].join(' ')
       }
@@ -149,7 +150,7 @@ const WalletNavButton = ({ onClick }: WalletNavButtonProps) => {
       type="button"
       data-test-id="connect-wallet"
       onClick={onClick}
-      className="inline-flex h-10 items-center gap-2 border-2 border-border bg-card px-4 text-xs font-semibold uppercase tracking-[0.12em] text-foreground transition-colors hover:bg-secondary"
+      className="inline-flex h-10 w-full items-center justify-center gap-2 border-2 border-border bg-card px-4 text-xs font-semibold uppercase tracking-[0.12em] text-foreground transition-colors hover:bg-secondary sm:w-auto"
     >
       <Wallet className="h-4 w-4" />
       <span>{activeAddress ? ellipseAddress(activeAddress, 5) : 'Connect Wallet'}</span>

@@ -1,21 +1,29 @@
 import { microAlgo } from '@algorandfoundation/algokit-utils'
 import type { AlgorandClient } from '@algorandfoundation/algokit-utils/types/algorand-client'
 import { VibecheckClient, VibecheckFactory } from '../smart_contracts/artifacts/vibecheck/VibecheckClient'
-import { DEFAULT_PROFILE_INIT_MBR_PAYMENT, ZERO_ADDRESS } from './algorand'
+import { DEFAULT_PROFILE_INIT_MBR_PAYMENT } from './algorand'
 import { TrustProfile } from './trustScoring'
 
 export interface AddTrustParams {
   sender: string
-  appId?: bigint
-  assetId?: bigint
-  peer?: string
+  appIds?: bigint[]
+  assetIds?: bigint[]
+  peers?: string[]
 }
 
-export interface RemoveTrustParams {
+export interface RemoveAppTrustParams {
   sender: string
-  appId?: bigint
-  assetId?: bigint
-  peer?: string
+  appId: bigint
+}
+
+export interface RemoveAsaTrustParams {
+  sender: string
+  assetId: bigint
+}
+
+export interface RemovePeerTrustParams {
+  sender: string
+  peer: string
 }
 
 export class VibecheckSdk {
@@ -51,23 +59,57 @@ export class VibecheckSdk {
   }
 
   public async addTrust(client: VibecheckClient, params: AddTrustParams) {
-    return client.send.add({
+    if ((params.appIds ?? []).length > 0) {
+      await client.send.addTrustedApps({
+        sender: params.sender,
+        args: {
+          apps: params.appIds ?? [],
+        },
+      })
+    }
+
+    if ((params.assetIds ?? []).length > 0) {
+      await client.send.addTrustedAsas({
+        sender: params.sender,
+        args: {
+          assets: params.assetIds ?? [],
+        },
+      })
+    }
+
+    if ((params.peers ?? []).length > 0) {
+      await client.send.addTrustedPeers({
+        sender: params.sender,
+        args: {
+          peers: params.peers ?? [],
+        },
+      })
+    }
+  }
+
+  public async removeApp(client: VibecheckClient, params: RemoveAppTrustParams) {
+    return client.send.removeApp({
       sender: params.sender,
       args: {
-        app: params.appId ?? 0n,
-        asset: params.assetId ?? 0n,
-        peer: params.peer ?? ZERO_ADDRESS,
+        app: params.appId,
       },
     })
   }
 
-  public async removeTrust(client: VibecheckClient, params: RemoveTrustParams) {
-    return client.send.remove({
+  public async removeAsa(client: VibecheckClient, params: RemoveAsaTrustParams) {
+    return client.send.removeAsa({
       sender: params.sender,
       args: {
-        app: params.appId ?? 0n,
-        asset: params.assetId ?? 0n,
-        peer: params.peer ?? ZERO_ADDRESS,
+        asset: params.assetId,
+      },
+    })
+  }
+
+  public async removePeer(client: VibecheckClient, params: RemovePeerTrustParams) {
+    return client.send.removePeer({
+      sender: params.sender,
+      args: {
+        peer: params.peer,
       },
     })
   }

@@ -1,12 +1,13 @@
 import { HelpCircle } from 'lucide-react'
-import { useMemo } from 'react'
-import { ellipseAddress } from '../utils/ellipseAddress'
 import { TrustNetworkAnalysis as TrustNetworkAnalysisData, TrustScoreOptions } from '../utils/trustScores'
 import { Badge } from './ui/badge'
 import { Button } from './ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
-import { Input } from './ui/input'
 import { Separator } from './ui/separator'
+import { TrustHopBreakdownList } from './trust-network/TrustHopBreakdownList'
+import { TrustNetworkGraph } from './trust-network/TrustNetworkGraph'
+import { TrustScoreOptionsForm } from './trust-network/TrustScoreOptionsForm'
+import { TrustTopContributorsList } from './trust-network/TrustTopContributorsList'
 
 interface TrustNetworkAnalysisProps {
   expanded: boolean
@@ -16,158 +17,6 @@ interface TrustNetworkAnalysisProps {
   analysis: TrustNetworkAnalysisData
   targetLabel: string
   targetTypeLabel: string
-}
-
-export function TrustNetworkAnalysis({
-  expanded,
-  onToggle,
-  options,
-  onOptionsChange,
-  analysis,
-  targetLabel,
-  targetTypeLabel,
-}: TrustNetworkAnalysisProps) {
-  const updateOption = (key: keyof Required<TrustScoreOptions>, value: number) => {
-    if (Number.isNaN(value)) {
-      return
-    }
-
-    if (key === 'maxDepth') {
-      onOptionsChange({ ...options, [key]: Math.max(0, Math.min(6, Math.round(value))) })
-      return
-    }
-
-    onOptionsChange({ ...options, [key]: Number(value.toFixed(2)) })
-  }
-
-  return (
-    <div className="space-y-3">
-      <Button variant="outline" className="w-full justify-between" onClick={onToggle}>
-        <span>{expanded ? 'Hide trust network analysis' : 'Analyze trust network'}</span>
-        <span className="text-xs text-muted-foreground">{expanded ? 'Collapse' : 'Expand'}</span>
-      </Button>
-
-      {expanded && (
-        <Card className="border-2 border-border bg-background/80">
-          <CardHeader className="space-y-2">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <CardTitle className="text-lg">
-                {targetTypeLabel} network for {targetLabel}
-              </CardTitle>
-              <Badge variant="secondary">Score {analysis.score.toFixed(3)}</Badge>
-            </div>
-            <CardDescription>
-              Score spreads from the seed account through trusted peers, with each hop carrying less influence based on your decay settings.
-            </CardDescription>
-            <details className="group rounded-sm border border-dashed border-border bg-muted/50 p-3 text-sm text-muted-foreground">
-              <summary className="flex cursor-pointer list-none items-center gap-2 font-medium text-foreground">
-                <HelpCircle className="h-4 w-4" />
-                How this score is computed
-              </summary>
-              <p className="mt-2 leading-relaxed">
-                We start from one account, then walk its trusted peers one level at a time. Direct trust has stronger weight. Peer trust
-                still matters, but gets discounted each hop so distant recommendations count less. This gives you a practical signal of
-                network confidence, not a final truth.
-              </p>
-            </details>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="space-y-1 text-xs uppercase tracking-wide text-muted-foreground">
-                Max depth
-                <Input
-                  type="number"
-                  min={0}
-                  max={6}
-                  value={options.maxDepth}
-                  onChange={(event) => updateOption('maxDepth', Number(event.target.value))}
-                />
-              </label>
-              <label className="space-y-1 text-xs uppercase tracking-wide text-muted-foreground">
-                Depth decay
-                <Input
-                  type="number"
-                  min={0}
-                  max={1}
-                  step={0.05}
-                  value={options.depthDecay}
-                  onChange={(event) => updateOption('depthDecay', Number(event.target.value))}
-                />
-              </label>
-              <label className="space-y-1 text-xs uppercase tracking-wide text-muted-foreground">
-                Direct weight
-                <Input
-                  type="number"
-                  min={0}
-                  step={0.1}
-                  value={options.directWeight}
-                  onChange={(event) => updateOption('directWeight', Number(event.target.value))}
-                />
-              </label>
-              <label className="space-y-1 text-xs uppercase tracking-wide text-muted-foreground">
-                Peer weight
-                <Input
-                  type="number"
-                  min={0}
-                  step={0.1}
-                  value={options.peerWeight}
-                  onChange={(event) => updateOption('peerWeight', Number(event.target.value))}
-                />
-              </label>
-            </div>
-
-            <Separator />
-
-            <div className="grid gap-3 text-sm sm:grid-cols-3">
-              <Metric title="Visited accounts" value={analysis.visitedAccounts.toString()} />
-              <Metric title="Max hop reached" value={analysis.maxVisitedDepth.toString()} />
-              <Metric title="Contributing nodes" value={analysis.contributions.length.toString()} />
-            </div>
-
-            <NetworkGraph analysis={analysis} />
-
-            <div className="space-y-2">
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">Hop breakdown</p>
-              <div className="space-y-2">
-                {analysis.hopBreakdown.map((hop) => (
-                  <div
-                    key={hop.depth}
-                    className="grid grid-cols-[1fr_auto_auto] items-center gap-2 rounded-sm border border-border bg-card px-3 py-2"
-                  >
-                    <span className="text-sm font-medium">Depth {hop.depth}</span>
-                    <span className="text-xs text-muted-foreground">Nodes {hop.nodesVisited}</span>
-                    <Badge variant="outline">+{hop.contribution.toFixed(3)}</Badge>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">Top contributors</p>
-              <div className="space-y-2">
-                {analysis.contributions.length === 0 && (
-                  <p className="rounded-sm border border-border bg-card px-3 py-2 text-sm text-muted-foreground">
-                    No nodes in the current walk trust this target.
-                  </p>
-                )}
-                {analysis.contributions.slice(0, 6).map((item) => (
-                  <div key={`${item.account}-${item.depth}`} className="rounded-sm border border-border bg-card px-3 py-2">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-sm font-medium">{ellipseAddress(item.account, 8)}</span>
-                      <Badge variant="secondary">+{item.contribution.toFixed(3)}</Badge>
-                    </div>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      Path: {item.path.map((value) => ellipseAddress(value, 5)).join(' -> ')}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-    </div>
-  )
 }
 
 interface MetricProps {
@@ -184,93 +33,66 @@ const Metric = ({ title, value }: MetricProps) => {
   )
 }
 
-interface NetworkGraphProps {
-  analysis: TrustNetworkAnalysisData
-}
-
-const NetworkGraph = ({ analysis }: NetworkGraphProps) => {
-  const graph = useMemo(() => {
-    const width = 820
-    const height = 280
-    const paddingX = 30
-    const paddingY = 30
-    const maxDepth = Math.max(analysis.maxVisitedDepth, 1)
-
-    const grouped = new Map<number, string[]>()
-    for (const account of analysis.allVisitedAccounts) {
-      const depth = analysis.depthByAccount[account] ?? 0
-      const list = grouped.get(depth) ?? []
-      list.push(account)
-      grouped.set(depth, list)
-    }
-
-    const positions = new Map<string, { x: number; y: number }>()
-    for (const [depth, accounts] of grouped.entries()) {
-      accounts.sort()
-      const x = paddingX + (depth / maxDepth) * (width - 2 * paddingX)
-      const rowHeight = (height - 2 * paddingY) / Math.max(accounts.length, 1)
-      accounts.forEach((account, index) => {
-        positions.set(account, {
-          x,
-          y: paddingY + rowHeight * index + rowHeight / 2,
-        })
-      })
-    }
-
-    const contributorSet = new Set(analysis.contributions.map((item) => item.account))
-
-    return {
-      width,
-      height,
-      positions,
-      contributorSet,
-    }
-  }, [analysis])
-
+export function TrustNetworkAnalysis({
+  expanded,
+  onToggle,
+  options,
+  onOptionsChange,
+  analysis,
+  targetLabel,
+  targetTypeLabel,
+}: TrustNetworkAnalysisProps) {
   return (
-    <div className="space-y-2 rounded-sm border border-border bg-card p-3">
-      <p className="text-xs uppercase tracking-wide text-muted-foreground">Network map</p>
-      <svg viewBox={`0 0 ${graph.width} ${graph.height}`} className="h-[280px] w-full rounded-sm bg-background/70">
-        {analysis.edges.map((edge) => {
-          const from = graph.positions.get(edge.from)
-          const to = graph.positions.get(edge.to)
-          if (!from || !to) return null
+    <div className="space-y-3">
+      <Button variant="outline" className="w-full justify-between" onClick={onToggle}>
+        <span>{expanded ? 'Hide trust network analysis' : 'Analyze trust network'}</span>
+        <span className="text-xs text-muted-foreground">{expanded ? 'Collapse' : 'Expand'}</span>
+      </Button>
 
-          return (
-            <line
-              key={`${edge.from}-${edge.to}`}
-              x1={from.x}
-              y1={from.y}
-              x2={to.x}
-              y2={to.y}
-              stroke="hsl(var(--border))"
-              strokeWidth={1.5}
-            />
-          )
-        })}
+      {expanded && (
+        <Card className="border-2 border-border bg-background/80">
+          <CardHeader className="space-y-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <CardTitle className="text-lg">
+                {targetTypeLabel} network for {targetLabel}
+              </CardTitle>
+              <Badge variant="secondary">Score {analysis.score.toFixed(3)}</Badge>
+            </div>
 
-        {analysis.allVisitedAccounts.map((account) => {
-          const point = graph.positions.get(account)
-          if (!point) return null
+            <CardDescription>
+              Score spreads from the seed account through trusted peers, with each hop carrying less influence based on your decay settings.
+            </CardDescription>
 
-          const isContributor = graph.contributorSet.has(account)
+            <details className="group rounded-sm border border-dashed border-border bg-muted/50 p-3 text-sm text-muted-foreground">
+              <summary className="flex cursor-pointer list-none items-center gap-2 font-medium text-foreground">
+                <HelpCircle className="h-4 w-4" />
+                How this score is computed
+              </summary>
+              <p className="mt-2 leading-relaxed">
+                We start from one account, then walk its trusted peers one level at a time. Direct trust has stronger weight. Peer trust
+                still matters, but gets discounted each hop so distant recommendations count less. This gives you a practical signal of
+                network confidence, not a final truth.
+              </p>
+            </details>
+          </CardHeader>
 
-          return (
-            <g key={account} transform={`translate(${point.x}, ${point.y})`}>
-              <circle
-                r={12}
-                fill={isContributor ? 'hsl(var(--primary))' : 'hsl(var(--card))'}
-                stroke="hsl(var(--border))"
-                strokeWidth={2}
-              />
-              <text x={16} y={4} fill="hsl(var(--foreground))" fontSize={12} fontWeight={600}>
-                {ellipseAddress(account, 4)}
-              </text>
-            </g>
-          )
-        })}
-      </svg>
-      <p className="text-xs text-muted-foreground">Highlighted nodes contribute directly to the selected target score.</p>
+          <CardContent className="space-y-4">
+            <TrustScoreOptionsForm options={options} onOptionsChange={onOptionsChange} />
+
+            <Separator />
+
+            <div className="grid gap-3 text-sm md:grid-cols-3">
+              <Metric title="Visited accounts" value={analysis.visitedAccounts.toString()} />
+              <Metric title="Max hop reached" value={analysis.maxVisitedDepth.toString()} />
+              <Metric title="Contributing nodes" value={analysis.contributions.length.toString()} />
+            </div>
+
+            <TrustNetworkGraph analysis={analysis} />
+            <TrustHopBreakdownList hopBreakdown={analysis.hopBreakdown} />
+            <TrustTopContributorsList contributions={analysis.contributions} />
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }
