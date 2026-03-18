@@ -22,7 +22,7 @@ const pillars = [
   },
 ]
 
-export default function LandingPage() {
+export default function HomePage() {
   return (
     <div className="space-y-5 sm:space-y-6">
       <section className="neo-panel overflow-hidden p-5 sm:p-8">

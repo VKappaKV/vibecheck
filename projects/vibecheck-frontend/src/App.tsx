@@ -7,7 +7,7 @@ import ConnectWallet from './components/ConnectWallet'
 import { ThemeMode, ThemeToggle } from './components/ThemeToggle'
 import { Badge } from './components/ui/badge'
 import DemoPage from './pages/DemoPage'
-import LandingPage from './pages/LandingPage'
+import LandingPage from './pages/HomePage'
 import { ellipseAddress } from './utils/ellipseAddress'
 import { getAlgodConfigFromViteEnvironment, getKmdConfigFromViteEnvironment } from './utils/network/getAlgoClientConfigs'
 
@@ -93,7 +93,7 @@ export default function App() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center sm:justify-end">
-                  <NavItem to="/">Landing</NavItem>
+                  <NavItem to="/">Home</NavItem>
                   <NavItem to="/demo">Demo</NavItem>
                   <WalletNavButton onClick={() => setOpenWalletModal(true)} />
                   <ThemeToggle theme={theme} onToggle={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} />

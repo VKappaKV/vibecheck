@@ -9,7 +9,7 @@ test('has title', async ({ page }) => {
   await expect(page).toHaveTitle('Vibecheck Trust Graph')
 })
 
-test('landing has demo CTA', async ({ page }) => {
+test('home has demo CTA', async ({ page }) => {
   await expect(page.getByTestId('open-demo')).toHaveText('Open Demo')
 })
 
