@@ -21,7 +21,6 @@ export interface TrustDemoState {
   scoreOptions: Required<TrustScoreOptions>
   setScoreOptions: (value: Required<TrustScoreOptions>) => void
   onChainAppId: string
-  setOnChainAppId: (value: string) => void
   onChainProfiles: TrustProfile[]
   isLoadingOnChainProfiles: boolean
   onChainError: string | null
@@ -115,7 +114,6 @@ export function useTrustDemo(): TrustDemoState {
     scoreOptions: data.scoreOptions,
     setScoreOptions: data.setScoreOptions,
     onChainAppId: data.onChainAppId,
-    setOnChainAppId: data.setOnChainAppId,
     onChainProfiles: data.onChainProfiles,
     isLoadingOnChainProfiles: data.isLoadingOnChainProfiles,
     onChainError: data.onChainError,

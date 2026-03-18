@@ -14,7 +14,6 @@ interface LiveDataControlsProps {
   selectedAssetId: bigint
   onSelectAssetId: (value: bigint) => void
   onChainAppId: string
-  onOnChainAppIdChange: (value: string) => void
   isLoadingOnChainProfiles: boolean
   onRefreshProfiles: () => void
   onCopyShareUrl: () => void
@@ -34,7 +33,6 @@ export function LiveDataControls({
   selectedAssetId,
   onSelectAssetId,
   onChainAppId,
-  onOnChainAppIdChange,
   isLoadingOnChainProfiles,
   onRefreshProfiles,
   onCopyShareUrl,
@@ -105,17 +103,10 @@ export function LiveDataControls({
       </div>
 
       <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
-        <label htmlFor="vibecheck-app-id" className="text-sm font-medium text-foreground">
-          Vibecheck app id
-          <Input
-            id="vibecheck-app-id"
-            type="number"
-            min={1}
-            value={onChainAppId}
-            onChange={(event) => onOnChainAppIdChange(event.target.value)}
-            placeholder="e.g. 123456"
-          />
-        </label>
+        <div className="grid gap-1 rounded-sm border-2 border-border bg-card/60 p-3 text-sm">
+          <span className="font-semibold uppercase tracking-[0.08em] text-foreground">Vibecheck app</span>
+          <span className="font-mono text-foreground">{onChainAppId || 'Not configured'}</span>
+        </div>
         <Button onClick={onRefreshProfiles} disabled={isLoadingOnChainProfiles} className="w-full md:w-auto">
           {isLoadingOnChainProfiles ? 'Loading network...' : 'Refresh on-chain network'}
         </Button>

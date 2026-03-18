@@ -48,7 +48,7 @@ export function useTrustProfileMutations({
 
     const appId = parsePositiveBigInt(onChainAppId.trim())
     if (!appId) {
-      enqueueSnackbar('Provide a valid Vibecheck app id', { variant: 'error' })
+      enqueueSnackbar('Vibecheck app id is not configured. Set VITE_VIBECHECK_APP_ID in the frontend env.', { variant: 'error' })
       return null
     }
 

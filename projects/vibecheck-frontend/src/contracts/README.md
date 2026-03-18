@@ -1,14 +1,36 @@
-## How to connect my web app with Algorand smart contracts?
+## Generated contract clients
 
-The following folder is reserved for the Algorand Application Clients. The clients are used to interact with instances of Algorand Smart Contracts (ASC1s) deployed on-chain.
+This folder contains generated TypeScript clients used by the frontend to call deployed Algorand applications.
 
-To integrate this react frontend template with your smart contracts codebase, perform the following steps:
+Current Vibecheck client:
 
-1. Generate the typed client using `algokit generate client -l typescript -o {path/to/this/folder}` or using the dedicated `link` command `algokit project link` (ensure to invoke it from the root of this react project). Using the `link` command is especially useful within workspaces that have multiple contract projects.
-2. The generated typescript client should be ready to be imported and used in this react frontend template, making it a full fledged dApp.
+- `Vibecheck.ts`
 
-> Please note, by default this template defines `"generate:app-clients": "algokit project link --all"` which is a shortcut to automatically link TEAL code from all `contract` projects in the workspace as typed clients into the `frontend` project that is invoking the `link` command. Refer to [documentation](https://github.com/algorandfoundation/algokit-cli/blob/main/docs/features/project/link.md) to read more about `link` command.
+Do not edit generated client files manually. Regenerate them from the contract project instead.
 
-## **How to interact with the smart contract?**
+## Regenerate clients
 
-The generated client provides a set of functions that can be used to interact with the ABI (Application Binary Interface) compliant Algorand smart contract. For example, if the smart contract has a function called `hello`, the generated client will have a function called `hello` that can be used to interact with the smart contract. Refer to a [full-stack end-to-end starter template](https://github.com/algorandfoundation/algokit-fullstack-template) for a reference example on invoking and interacting with typescript typed clients generated.
+From `projects/vibecheck-frontend`:
+
+```bash
+npm run generate:app-clients
+```
+
+This runs `algokit project link --all`, which reads app specs from workspace contract projects and writes fresh clients into this folder.
+
+## Typical usage in frontend code
+
+```ts
+import { AlgorandClient } from '@algorandfoundation/algokit-utils'
+import { VibecheckFactory } from '../contracts/Vibecheck'
+import { getAlgodConfigFromViteEnvironment, getIndexerConfigFromViteEnvironment } from '../utils/network/getAlgoClientConfigs'
+
+const algorand = AlgorandClient.fromConfig({
+  algodConfig: getAlgodConfigFromViteEnvironment(),
+  indexerConfig: getIndexerConfigFromViteEnvironment(),
+})
+const factory = new VibecheckFactory({ algorand, defaultSender: activeAddress })
+const appClient = factory.getAppClientById({ appId: BigInt(import.meta.env.VITE_VIBECHECK_APP_ID) })
+```
+
+See `src/components/trust-demo/useTrustDemoData.ts` and `src/components/trust-demo/useTrustProfileMutations.ts` for real usage patterns.

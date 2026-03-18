@@ -39,7 +39,6 @@ export interface TrustDemoDataState {
   scoreOptions: Required<TrustScoreOptions>
   setScoreOptions: (value: Required<TrustScoreOptions>) => void
   onChainAppId: string
-  setOnChainAppId: (value: string) => void
   onChainProfiles: TrustProfile[]
   isLoadingOnChainProfiles: boolean
   onChainError: string | null
@@ -65,11 +64,10 @@ export function useTrustDemoData({ activeAddress, enqueueSnackbar }: UseTrustDem
   const [selectedAssetId, setSelectedAssetId] = useState<bigint>(() => parseBigInt(searchParams.get('asaTarget'), 1n))
   const [analysisExpanded, setAnalysisExpanded] = useState<boolean>(() => searchParams.get('analysis') === '1')
   const [scoreOptions, setScoreOptions] = useState<Required<TrustScoreOptions>>(() => parseScoreOptions(searchParams, DEFAULT_OPTIONS))
-  const [onChainAppId, setOnChainAppId] = useState<string>(() => {
-    const appIdParam = searchParams.get('appId')
-    const parsed = appIdParam ? parsePositiveBigInt(appIdParam) : null
+  const onChainAppId = useMemo(() => {
+    const parsed = parsePositiveBigInt(import.meta.env.VITE_VIBECHECK_APP_ID?.trim() ?? '')
     return parsed ? parsed.toString() : ''
-  })
+  }, [])
   const [onChainProfiles, setOnChainProfiles] = useState<TrustProfile[]>([])
   const [isLoadingOnChainProfiles, setIsLoadingOnChainProfiles] = useState<boolean>(false)
   const [onChainError, setOnChainError] = useState<string | null>(null)
@@ -106,16 +104,11 @@ export function useTrustDemoData({ activeAddress, enqueueSnackbar }: UseTrustDem
     next.set('dw', String(scoreOptions.directWeight))
     next.set('pw', String(scoreOptions.peerWeight))
     next.set('analysis', analysisExpanded ? '1' : '0')
-    if (onChainAppId.trim()) {
-      next.set('appId', onChainAppId.trim())
-    }
-
     if (next.toString() !== searchParams.toString()) {
       setSearchParams(next, { replace: true })
     }
   }, [
     analysisExpanded,
-    onChainAppId,
     scoreOptions.depthDecay,
     scoreOptions.directWeight,
     scoreOptions.maxDepth,
@@ -245,9 +238,11 @@ export function useTrustDemoData({ activeAddress, enqueueSnackbar }: UseTrustDem
 
       const appId = parsePositiveBigInt(onChainAppId.trim())
       if (!appId) {
-        setOnChainError('Provide a valid Vibecheck app id')
+        setOnChainError('Vibecheck app id is not configured. Set VITE_VIBECHECK_APP_ID in the frontend env.')
         if (!silent) {
-          enqueueSnackbar('Provide a valid Vibecheck app id', { variant: 'error' })
+          enqueueSnackbar('Vibecheck app id is not configured. Set VITE_VIBECHECK_APP_ID in the frontend env.', {
+            variant: 'error',
+          })
         }
         return
       }
@@ -299,12 +294,9 @@ export function useTrustDemoData({ activeAddress, enqueueSnackbar }: UseTrustDem
     inviteUrl.searchParams.set('seed', activeAddress)
     inviteUrl.searchParams.set('tab', 'apps')
     inviteUrl.searchParams.set('invitePeer', activeAddress)
-    if (onChainAppId.trim()) {
-      inviteUrl.searchParams.set('appId', onChainAppId.trim())
-    }
 
     return inviteUrl.toString()
-  }, [activeAddress, onChainAppId])
+  }, [activeAddress])
 
   const peerInviteQrUrl = useMemo(() => {
     if (!peerInviteLink) {
@@ -329,7 +321,6 @@ export function useTrustDemoData({ activeAddress, enqueueSnackbar }: UseTrustDem
     scoreOptions,
     setScoreOptions,
     onChainAppId,
-    setOnChainAppId,
     onChainProfiles,
     isLoadingOnChainProfiles,
     onChainError,
