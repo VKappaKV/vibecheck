@@ -24,6 +24,15 @@ export interface TrustDemoState {
   onChainProfiles: TrustProfile[]
   isLoadingOnChainProfiles: boolean
   onChainError: string | null
+  isLoadingProfileSummary: boolean
+  profileSummaryError: string | null
+  isProfileInitialized: boolean | null
+  trustedAppCount: number
+  trustedAsaCount: number
+  trustedPeerCount: number
+  asaOptInCount: number
+  nfdName: string
+  nfdAvatarUrl: string
   mutationAppIdInput: string
   setMutationAppIdInput: (value: string) => void
   mutationAsaIdInput: string
@@ -117,6 +126,15 @@ export function useTrustDemo(): TrustDemoState {
     onChainProfiles: data.onChainProfiles,
     isLoadingOnChainProfiles: data.isLoadingOnChainProfiles,
     onChainError: data.onChainError,
+    isLoadingProfileSummary: data.isLoadingProfileSummary,
+    profileSummaryError: data.profileSummaryError,
+    isProfileInitialized: data.isProfileInitialized,
+    trustedAppCount: data.trustedAppCount,
+    trustedAsaCount: data.trustedAsaCount,
+    trustedPeerCount: data.trustedPeerCount,
+    asaOptInCount: data.asaOptInCount,
+    nfdName: data.nfdName,
+    nfdAvatarUrl: data.nfdAvatarUrl,
     mutationAppIdInput,
     setMutationAppIdInput,
     mutationAsaIdInput,

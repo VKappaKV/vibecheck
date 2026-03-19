@@ -19,6 +19,131 @@ import { ScoreEntry, ScoreTab, ScoreTarget } from './types'
 
 type EnqueueSnackbar = (message: string, options?: { variant?: 'default' | 'error' | 'success' | 'warning' | 'info' }) => void
 
+interface NfdRecord {
+  name?: string
+  properties?: {
+    userDefined?: {
+      avatar?: string
+    }
+    verified?: {
+      avatar?: string
+    }
+  }
+}
+
+interface NfdLookupResponse {
+  [address: string]: NfdRecord | undefined
+}
+
+interface AccountLookupResponse {
+  account?: {
+    assets?: unknown[]
+  }
+}
+
+function getRequestHeaders(token: unknown): HeadersInit {
+  const headers: Record<string, string> = { Accept: 'application/json' }
+
+  if (typeof token === 'string') {
+    const trimmed = token.trim()
+    if (trimmed) {
+      headers['X-Algo-API-Token'] = trimmed
+    }
+    return headers
+  }
+
+  if (token && typeof token === 'object') {
+    for (const [key, value] of Object.entries(token)) {
+      headers[key] = String(value)
+    }
+  }
+
+  return headers
+}
+
+function getApiBaseUrl(server: string, port: number | string): string {
+  const url = new URL(server)
+  const nextPort = String(port)
+
+  if (nextPort && !url.port && !((url.protocol === 'https:' && nextPort === '443') || (url.protocol === 'http:' && nextPort === '80'))) {
+    url.port = nextPort
+  }
+
+  return url.toString().replace(/\/$/, '')
+}
+
+function getNfdLookupEndpoints(network: string): string[] {
+  const normalized = network.toLowerCase()
+
+  if (normalized.includes('local')) {
+    return []
+  }
+
+  if (normalized.includes('testnet')) {
+    return ['https://api.testnet.nf.domains', 'https://api.nf.domains']
+  }
+
+  if (normalized.includes('mainnet') || normalized.includes('production')) {
+    return ['https://api.nf.domains']
+  }
+
+  return ['https://api.nf.domains']
+}
+
+async function fetchAsaOptInCount(args: {
+  indexerServer: string
+  indexerPort: string | number
+  indexerToken: unknown
+  address: string
+}): Promise<number> {
+  const baseUrl = getApiBaseUrl(args.indexerServer, args.indexerPort)
+  const url = `${baseUrl}/v2/accounts/${encodeURIComponent(args.address)}`
+  const response = await fetch(url, { headers: getRequestHeaders(args.indexerToken) })
+
+  if (!response.ok) {
+    throw new Error(`Unable to load account holdings (${response.status})`)
+  }
+
+  const data = (await response.json()) as AccountLookupResponse
+  return data.account?.assets?.length ?? 0
+}
+
+async function fetchNfdData(network: string, address: string): Promise<{ name: string; avatarUrl: string } | null> {
+  const endpoints = getNfdLookupEndpoints(network)
+
+  for (const endpoint of endpoints) {
+    const url = `${endpoint}/nfd/lookup?address=${encodeURIComponent(address)}&view=thumbnail`
+
+    try {
+      const response = await fetch(url, { headers: { Accept: 'application/json' } })
+
+      if (response.status === 404) {
+        continue
+      }
+
+      if (!response.ok) {
+        continue
+      }
+
+      const payload = (await response.json()) as NfdLookupResponse
+      const record = payload[address] ?? payload[address.toUpperCase()]
+
+      if (!record?.name) {
+        continue
+      }
+
+      return {
+        name: record.name,
+        avatarUrl: record.properties?.verified?.avatar ?? record.properties?.userDefined?.avatar ?? '',
+      }
+    } catch {
+      continue
+    }
+  }
+
+  return null
+}
+
 interface UseTrustDemoDataArgs {
   activeAddress: string | null
   enqueueSnackbar: EnqueueSnackbar
@@ -42,6 +167,15 @@ export interface TrustDemoDataState {
   onChainProfiles: TrustProfile[]
   isLoadingOnChainProfiles: boolean
   onChainError: string | null
+  isLoadingProfileSummary: boolean
+  profileSummaryError: string | null
+  isProfileInitialized: boolean | null
+  trustedAppCount: number
+  trustedAsaCount: number
+  trustedPeerCount: number
+  asaOptInCount: number
+  nfdName: string
+  nfdAvatarUrl: string
   invitePeerPrefill: string
   seedAccounts: string[]
   appTargets: ScoreTarget[]
@@ -71,6 +205,15 @@ export function useTrustDemoData({ activeAddress, enqueueSnackbar }: UseTrustDem
   const [onChainProfiles, setOnChainProfiles] = useState<TrustProfile[]>([])
   const [isLoadingOnChainProfiles, setIsLoadingOnChainProfiles] = useState<boolean>(false)
   const [onChainError, setOnChainError] = useState<string | null>(null)
+  const [isLoadingProfileSummary, setIsLoadingProfileSummary] = useState<boolean>(false)
+  const [profileSummaryError, setProfileSummaryError] = useState<string | null>(null)
+  const [isProfileInitialized, setIsProfileInitialized] = useState<boolean | null>(null)
+  const [trustedAppCount, setTrustedAppCount] = useState<number>(0)
+  const [trustedAsaCount, setTrustedAsaCount] = useState<number>(0)
+  const [trustedPeerCount, setTrustedPeerCount] = useState<number>(0)
+  const [asaOptInCount, setAsaOptInCount] = useState<number>(0)
+  const [nfdName, setNfdName] = useState<string>('')
+  const [nfdAvatarUrl, setNfdAvatarUrl] = useState<string>('')
 
   const invitePeerPrefill = useMemo(() => searchParams.get('invitePeer') ?? '', [searchParams])
 
@@ -285,6 +428,115 @@ export function useTrustDemoData({ activeAddress, enqueueSnackbar }: UseTrustDem
     void loadOnChainProfiles({ silent: true })
   }, [activeAddress, loadOnChainProfiles, onChainAppId, seedAccount])
 
+  useEffect(() => {
+    let cancelled = false
+
+    const resetProfileSummary = () => {
+      setIsLoadingProfileSummary(false)
+      setProfileSummaryError(null)
+      setIsProfileInitialized(null)
+      setTrustedAppCount(0)
+      setTrustedAsaCount(0)
+      setTrustedPeerCount(0)
+      setAsaOptInCount(0)
+      setNfdName('')
+      setNfdAvatarUrl('')
+    }
+
+    const loadProfileSummary = async () => {
+      if (!activeAddress) {
+        resetProfileSummary()
+        return
+      }
+
+      const appId = parsePositiveBigInt(onChainAppId.trim())
+      if (!appId) {
+        if (!cancelled) {
+          setProfileSummaryError('Vibecheck app id not configured')
+          setIsProfileInitialized(null)
+          setTrustedAppCount(0)
+          setTrustedAsaCount(0)
+          setTrustedPeerCount(0)
+          setAsaOptInCount(0)
+          setNfdName('')
+          setNfdAvatarUrl('')
+        }
+        return
+      }
+
+      setIsLoadingProfileSummary(true)
+      setProfileSummaryError(null)
+
+      try {
+        const factory = new VibecheckFactory({
+          algorand,
+          defaultSender: activeAddress,
+        })
+        const appClient = factory.getAppClientById({ appId })
+
+        const [trustedAppsBoxValue, trustedAsasBoxValue, trustedPeersBoxValue, nextAsaOptInCount, nfdIdentity] = await Promise.all([
+          appClient.state.box.trustedApp.value(activeAddress),
+          appClient.state.box.trustedAsa.value(activeAddress),
+          appClient.state.box.adjacencyList.value(activeAddress),
+          fetchAsaOptInCount({
+            indexerServer: indexerConfig.server,
+            indexerPort: indexerConfig.port,
+            indexerToken: indexerConfig.token,
+            address: activeAddress,
+          }),
+          fetchNfdData(algodConfig.network, activeAddress),
+        ])
+
+        if (cancelled) {
+          return
+        }
+
+        const profileExists = trustedAppsBoxValue !== undefined || trustedAsasBoxValue !== undefined || trustedPeersBoxValue !== undefined
+
+        setIsProfileInitialized(profileExists)
+        setTrustedAppCount(trustedAppsBoxValue?.length ?? 0)
+        setTrustedAsaCount(trustedAsasBoxValue?.length ?? 0)
+        setTrustedPeerCount(trustedPeersBoxValue?.length ?? 0)
+        setAsaOptInCount(nextAsaOptInCount)
+        setNfdName(nfdIdentity?.name ?? '')
+        setNfdAvatarUrl(nfdIdentity?.avatarUrl ?? '')
+      } catch (error) {
+        if (cancelled) {
+          return
+        }
+
+        const message = error instanceof Error ? error.message : 'Failed to load profile overview'
+        setProfileSummaryError(message)
+        setIsProfileInitialized(null)
+        setTrustedAppCount(0)
+        setTrustedAsaCount(0)
+        setTrustedPeerCount(0)
+        setAsaOptInCount(0)
+        setNfdName('')
+        setNfdAvatarUrl('')
+      } finally {
+        if (!cancelled) {
+          setIsLoadingProfileSummary(false)
+        }
+      }
+    }
+
+    void loadProfileSummary()
+
+    return () => {
+      cancelled = true
+    }
+  }, [
+    activeAddress,
+    algodConfig.network,
+    algorand,
+    indexerConfig.port,
+    indexerConfig.server,
+    indexerConfig.token,
+    onChainAppId,
+    onChainProfiles,
+  ])
+
   const peerInviteLink = useMemo(() => {
     if (!activeAddress) {
       return ''
@@ -324,6 +576,15 @@ export function useTrustDemoData({ activeAddress, enqueueSnackbar }: UseTrustDem
     onChainProfiles,
     isLoadingOnChainProfiles,
     onChainError,
+    isLoadingProfileSummary,
+    profileSummaryError,
+    isProfileInitialized,
+    trustedAppCount,
+    trustedAsaCount,
+    trustedPeerCount,
+    asaOptInCount,
+    nfdName,
+    nfdAvatarUrl,
     invitePeerPrefill,
     seedAccounts,
     appTargets,
