@@ -1,6 +1,10 @@
-import { ShieldCheck, ShieldOff, UserCircle2 } from 'lucide-react'
+import { Copy, QrCode, ShieldCheck, ShieldOff, UserCircle2 } from 'lucide-react'
+import { useMemo } from 'react'
 import { ellipseAddress } from '../../utils/ellipseAddress'
 import { Badge } from '../ui/badge'
+import { Button } from '../ui/button'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog'
+import { Input } from '../ui/input'
 
 interface ProfileOverviewPanelProps {
   activeAddress: string | null
@@ -13,6 +17,9 @@ interface ProfileOverviewPanelProps {
   trustedAppCount: number
   trustedAsaCount: number
   trustedPeerCount: number
+  peerInviteQrUrl: string
+  peerInviteLink: string
+  onCopyPeerInviteLink: () => Promise<void>
 }
 
 interface MetricProps {
@@ -40,6 +47,9 @@ export function ProfileOverviewPanel({
   trustedAppCount,
   trustedAsaCount,
   trustedPeerCount,
+  peerInviteQrUrl,
+  peerInviteLink,
+  onCopyPeerInviteLink,
 }: ProfileOverviewPanelProps) {
   if (!activeAddress) {
     return (
@@ -50,6 +60,18 @@ export function ProfileOverviewPanel({
   }
 
   const displayName = nfdName || ellipseAddress(activeAddress, 9)
+  const derivedPeerInviteLink = useMemo(() => {
+    const inviteUrl = new URL(window.location.href)
+    inviteUrl.searchParams.set('seed', activeAddress)
+    inviteUrl.searchParams.set('tab', 'apps')
+    inviteUrl.searchParams.set('invitePeer', activeAddress)
+
+    return inviteUrl.toString()
+  }, [activeAddress])
+  const effectivePeerInviteLink = peerInviteLink || derivedPeerInviteLink
+  const effectivePeerInviteQrUrl =
+    peerInviteQrUrl ||
+    `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=10&data=${encodeURIComponent(effectivePeerInviteLink)}`
   const initializationBadge =
     isProfileInitialized === null
       ? { label: 'Unknown', icon: ShieldOff }
@@ -73,7 +95,50 @@ export function ProfileOverviewPanel({
           </div>
 
           <div>
-            <p className="text-base font-semibold text-foreground">{displayName}</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-base font-semibold text-foreground">{displayName}</p>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button type="button" size="sm" variant="outline">
+                    <QrCode className="mr-1.5 h-4 w-4" />
+                    Share QR
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-sm">
+                  <DialogHeader>
+                    <DialogTitle>Peer invite QR</DialogTitle>
+                    <DialogDescription>Scan to open the demo with your address prefilled as peer.</DialogDescription>
+                  </DialogHeader>
+
+                  {effectivePeerInviteQrUrl ? (
+                    <img
+                      src={effectivePeerInviteQrUrl}
+                      alt="Peer invite QR code"
+                      width={280}
+                      height={280}
+                      className="mx-auto rounded-sm border border-border"
+                    />
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Unable to generate a peer invite QR code right now.</p>
+                  )}
+
+                  <div className="mt-2 flex items-center gap-2">
+                    <Input readOnly value={effectivePeerInviteLink} placeholder="Unable to generate invite URL" />
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="secondary"
+                      onClick={() => void onCopyPeerInviteLink()}
+                      disabled={!effectivePeerInviteLink}
+                      aria-label="Copy invite URL"
+                      title="Copy invite URL"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
             <p className="font-mono text-xs text-muted-foreground">{ellipseAddress(activeAddress, 10)}</p>
           </div>
         </div>

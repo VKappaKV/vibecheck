@@ -95,13 +95,25 @@ export function useTrustDemo(): TrustDemoState {
   }
 
   const copyPeerInviteLink = async () => {
-    if (!data.peerInviteLink) {
+    const inviteLink =
+      data.peerInviteLink ||
+      (activeAddress
+        ? (() => {
+            const inviteUrl = new URL(window.location.href)
+            inviteUrl.searchParams.set('seed', activeAddress)
+            inviteUrl.searchParams.set('tab', 'apps')
+            inviteUrl.searchParams.set('invitePeer', activeAddress)
+            return inviteUrl.toString()
+          })()
+        : '')
+
+    if (!inviteLink) {
       enqueueSnackbar('Connect wallet to generate a peer invite URL', { variant: 'warning' })
       return
     }
 
     try {
-      await navigator.clipboard.writeText(data.peerInviteLink)
+      await navigator.clipboard.writeText(inviteLink)
       enqueueSnackbar('Peer invite URL copied', { variant: 'success' })
     } catch {
       enqueueSnackbar('Clipboard unavailable. Copy the URL manually.', { variant: 'warning' })

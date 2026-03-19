@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react'
-import { AppWindow, Coins, Copy, QrCode, Users, type LucideIcon } from 'lucide-react'
+import { AppWindow, Coins, Users, type LucideIcon } from 'lucide-react'
 import { Button } from '../ui/button'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog'
 import { Input } from '../ui/input'
 
 interface ProfileManagementPanelProps {
@@ -19,9 +18,6 @@ interface ProfileManagementPanelProps {
   onMutationPeerChange: (value: string) => void
   onAddTrustedPeer: () => Promise<void>
   onRemoveTrustedPeer: () => Promise<void>
-  peerInviteQrUrl: string
-  peerInviteLink: string
-  onCopyPeerInviteLink: () => Promise<void>
 }
 
 interface MutationRowProps {
@@ -97,9 +93,6 @@ export function ProfileManagementPanel({
   onMutationPeerChange,
   onAddTrustedPeer,
   onRemoveTrustedPeer,
-  peerInviteQrUrl,
-  peerInviteLink,
-  onCopyPeerInviteLink,
 }: ProfileManagementPanelProps) {
   const [activeMutationTarget, setActiveMutationTarget] = useState<MutationTarget>('peer')
 
@@ -197,55 +190,6 @@ export function ProfileManagementPanel({
         isMutatingProfile={isMutatingProfile}
         type={mutationRow.type}
       />
-
-      <div className="rounded-sm border border-border bg-background/70 p-3">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <p className="text-sm font-semibold text-foreground">Peer invite QR</p>
-            <p className="text-xs text-muted-foreground">Share this so another user can prefill your address in their add-peer form.</p>
-          </div>
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="outline" disabled={!peerInviteQrUrl} className="w-full sm:w-auto">
-                <QrCode className="mr-2 h-4 w-4" />
-                Show QR
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-sm">
-              <DialogHeader>
-                <DialogTitle>Peer invite QR</DialogTitle>
-                <DialogDescription>Scan to open the demo with your peer address prefilled.</DialogDescription>
-              </DialogHeader>
-              {peerInviteQrUrl ? (
-                <img
-                  src={peerInviteQrUrl}
-                  alt="Peer invite QR code"
-                  width={280}
-                  height={280}
-                  className="mx-auto rounded-sm border border-border"
-                />
-              ) : (
-                <p className="text-sm text-muted-foreground">Connect wallet to generate your peer invite QR code.</p>
-              )}
-            </DialogContent>
-          </Dialog>
-        </div>
-
-        <div className="mt-3 flex items-center gap-2">
-          <Input readOnly value={peerInviteLink} placeholder="Connect wallet to generate invite URL" />
-          <Button
-            type="button"
-            size="icon"
-            variant="secondary"
-            onClick={() => void onCopyPeerInviteLink()}
-            disabled={!peerInviteLink}
-            aria-label="Copy invite URL"
-            title="Copy invite URL"
-          >
-            <Copy className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
     </div>
   )
 }

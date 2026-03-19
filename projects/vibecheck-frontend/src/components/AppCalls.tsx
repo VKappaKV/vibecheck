@@ -67,6 +67,9 @@ const AppCalls = () => {
             trustedAppCount={demo.trustedAppCount}
             trustedAsaCount={demo.trustedAsaCount}
             trustedPeerCount={demo.trustedPeerCount}
+            peerInviteQrUrl={demo.peerInviteQrUrl}
+            peerInviteLink={demo.peerInviteLink}
+            onCopyPeerInviteLink={demo.copyPeerInviteLink}
           />
         )}
 
@@ -86,9 +89,6 @@ const AppCalls = () => {
             onMutationPeerChange={demo.setMutationPeerInput}
             onAddTrustedPeer={demo.addTrustedPeer}
             onRemoveTrustedPeer={demo.removeTrustedPeer}
-            peerInviteQrUrl={demo.peerInviteQrUrl}
-            peerInviteLink={demo.peerInviteLink}
-            onCopyPeerInviteLink={demo.copyPeerInviteLink}
           />
         )}
 
