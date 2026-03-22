@@ -1,8 +1,8 @@
 import { AlgorandClient } from '@algorandfoundation/algokit-utils'
 import { isValidAddress } from 'algosdk'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { VibecheckFactory } from '../../contracts/Vibecheck'
+import { VibecheckClient, VibecheckFactory } from '../../contracts/Vibecheck'
 import { getAlgodConfigFromViteEnvironment, getIndexerConfigFromViteEnvironment } from '../../utils/network/getAlgoClientConfigs'
 import {
   analyzeAppTrust,
@@ -15,6 +15,7 @@ import {
 import { collectProfilesFromChain } from './collectProfilesFromChain'
 import { DEFAULT_OPTIONS } from './constants'
 import { parseBigInt, parsePositiveBigInt, parseScoreOptions, parseScoreTab } from './parsers'
+import { readProfileSnapshot } from './readProfileSnapshot'
 import { ScoreEntry, ScoreTab, ScoreTarget } from './types'
 
 type EnqueueSnackbar = (message: string, options?: { variant?: 'default' | 'error' | 'success' | 'warning' | 'info' }) => void
@@ -40,6 +41,9 @@ interface AccountLookupResponse {
     assets?: unknown[]
   }
 }
+
+const ALGOD_CONFIG = getAlgodConfigFromViteEnvironment()
+const INDEXER_CONFIG = getIndexerConfigFromViteEnvironment()
 
 function getRequestHeaders(token: unknown): HeadersInit {
   const headers: Record<string, string> = { Accept: 'application/json' }
@@ -166,8 +170,10 @@ export interface TrustDemoDataState {
   onChainAppId: string
   onChainProfiles: TrustProfile[]
   isLoadingOnChainProfiles: boolean
+  isOnChainProfilesStale: boolean
   onChainError: string | null
   isLoadingProfileSummary: boolean
+  isProfileSummaryStale: boolean
   profileSummaryError: string | null
   isProfileInitialized: boolean | null
   trustedAppCount: number
@@ -186,7 +192,9 @@ export interface TrustDemoDataState {
   activeAnalysis: ReturnType<typeof analyzeAppTrust>
   peerInviteLink: string
   peerInviteQrUrl: string
-  loadOnChainProfiles: (options?: { silent?: boolean }) => Promise<void>
+  refreshOnChainProfiles: () => Promise<void>
+  refreshProfileSummary: () => Promise<void>
+  markTrustDataStale: () => void
 }
 
 export function useTrustDemoData({ activeAddress, enqueueSnackbar }: UseTrustDemoDataArgs): TrustDemoDataState {
@@ -204,8 +212,10 @@ export function useTrustDemoData({ activeAddress, enqueueSnackbar }: UseTrustDem
   }, [])
   const [onChainProfiles, setOnChainProfiles] = useState<TrustProfile[]>([])
   const [isLoadingOnChainProfiles, setIsLoadingOnChainProfiles] = useState<boolean>(false)
+  const [isOnChainProfilesStale, setIsOnChainProfilesStale] = useState<boolean>(true)
   const [onChainError, setOnChainError] = useState<string | null>(null)
   const [isLoadingProfileSummary, setIsLoadingProfileSummary] = useState<boolean>(false)
+  const [isProfileSummaryStale, setIsProfileSummaryStale] = useState<boolean>(true)
   const [profileSummaryError, setProfileSummaryError] = useState<string | null>(null)
   const [isProfileInitialized, setIsProfileInitialized] = useState<boolean | null>(null)
   const [trustedAppCount, setTrustedAppCount] = useState<number>(0)
@@ -214,20 +224,32 @@ export function useTrustDemoData({ activeAddress, enqueueSnackbar }: UseTrustDem
   const [asaOptInCount, setAsaOptInCount] = useState<number>(0)
   const [nfdName, setNfdName] = useState<string>('')
   const [nfdAvatarUrl, setNfdAvatarUrl] = useState<string>('')
+  const onChainProfilesRequestId = useRef(0)
+  const profileSummaryRequestId = useRef(0)
 
   const invitePeerPrefill = useMemo(() => searchParams.get('invitePeer') ?? '', [searchParams])
-
-  const algodConfig = getAlgodConfigFromViteEnvironment()
-  const indexerConfig = getIndexerConfigFromViteEnvironment()
 
   const algorand = useMemo(
     () =>
       AlgorandClient.fromConfig({
-        algodConfig,
-        indexerConfig,
+        algodConfig: ALGOD_CONFIG,
+        indexerConfig: INDEXER_CONFIG,
       }),
-    [algodConfig, indexerConfig],
+    [],
   )
+
+  const onChainAppClient = useMemo<VibecheckClient | null>(() => {
+    const appId = parsePositiveBigInt(onChainAppId.trim())
+
+    if (!activeAddress || !appId) {
+      return null
+    }
+
+    return new VibecheckFactory({
+      algorand,
+      defaultSender: activeAddress,
+    }).getAppClientById({ appId })
+  }, [activeAddress, algorand, onChainAppId])
 
   useEffect(() => {
     if (!seedAccount && activeAddress) {
@@ -358,184 +380,163 @@ export function useTrustDemoData({ activeAddress, enqueueSnackbar }: UseTrustDem
 
   const activeAnalysis = tabValue === 'apps' ? appNetworkAnalysis : assetNetworkAnalysis
 
-  const loadOnChainProfiles = useCallback(
-    async (options?: { silent?: boolean }) => {
-      const silent = options?.silent ?? false
+  const resetProfileSummary = useCallback(() => {
+    setIsLoadingProfileSummary(false)
+    setProfileSummaryError(null)
+    setIsProfileInitialized(null)
+    setTrustedAppCount(0)
+    setTrustedAsaCount(0)
+    setTrustedPeerCount(0)
+    setAsaOptInCount(0)
+    setNfdName('')
+    setNfdAvatarUrl('')
+  }, [])
 
-      if (!activeAddress) {
-        setOnChainError('Connect a wallet before loading on-chain profiles')
-        if (!silent) {
-          enqueueSnackbar('Connect a wallet before loading on-chain profiles', { variant: 'warning' })
-        }
-        return
-      }
+  const markTrustDataStale = useCallback(() => {
+    setIsOnChainProfilesStale(true)
+    setIsProfileSummaryStale(true)
+  }, [])
 
-      const trimmedSeed = seedAccount.trim()
-      if (!isValidAddress(trimmedSeed)) {
-        setOnChainError('Seed account must be a valid Algorand address')
-        if (!silent) {
-          enqueueSnackbar('Seed account must be a valid Algorand address', { variant: 'error' })
-        }
-        return
-      }
-
-      const appId = parsePositiveBigInt(onChainAppId.trim())
-      if (!appId) {
-        setOnChainError('Vibecheck app id is not configured. Set VITE_VIBECHECK_APP_ID in the frontend env.')
-        if (!silent) {
-          enqueueSnackbar('Vibecheck app id is not configured. Set VITE_VIBECHECK_APP_ID in the frontend env.', {
-            variant: 'error',
-          })
-        }
-        return
-      }
-
-      setIsLoadingOnChainProfiles(true)
-      setOnChainError(null)
-
-      try {
-        const factory = new VibecheckFactory({
-          algorand,
-          defaultSender: activeAddress,
-        })
-        const appClient = factory.getAppClientById({ appId })
-        const profiles = await collectProfilesFromChain(appClient, trimmedSeed, activeAddress, scoreOptions.maxDepth)
-
-        setOnChainProfiles(profiles)
-        if (!silent) {
-          enqueueSnackbar(`Loaded ${profiles.length} profiles from app ${appId.toString()}`, { variant: 'success' })
-        }
-      } catch (error) {
-        const message = error instanceof Error ? error.message : 'Failed to load on-chain profiles'
-        setOnChainError(message)
-        if (!silent) {
-          enqueueSnackbar(message, { variant: 'error' })
-        }
-      } finally {
-        setIsLoadingOnChainProfiles(false)
-      }
-    },
-    [activeAddress, algorand, enqueueSnackbar, onChainAppId, scoreOptions.maxDepth, seedAccount],
-  )
-
-  useEffect(() => {
-    const appId = parsePositiveBigInt(onChainAppId.trim())
-    const trimmedSeed = seedAccount.trim()
-    if (!activeAddress || !appId || !isValidAddress(trimmedSeed)) {
+  const refreshOnChainProfiles = useCallback(async () => {
+    if (!activeAddress) {
+      setOnChainError('Connect a wallet before loading on-chain profiles')
+      enqueueSnackbar('Connect a wallet before loading on-chain profiles', { variant: 'warning' })
+      setIsOnChainProfilesStale(true)
       return
     }
 
-    void loadOnChainProfiles({ silent: true })
-  }, [activeAddress, loadOnChainProfiles, onChainAppId, seedAccount])
+    const trimmedSeed = seedAccount.trim()
+    if (!isValidAddress(trimmedSeed)) {
+      setOnChainError('Seed account must be a valid Algorand address')
+      enqueueSnackbar('Seed account must be a valid Algorand address', { variant: 'error' })
+      setIsOnChainProfilesStale(true)
+      return
+    }
+
+    const appId = parsePositiveBigInt(onChainAppId.trim())
+    if (!appId || !onChainAppClient) {
+      setOnChainError('Vibecheck app id is not configured. Set VITE_VIBECHECK_APP_ID in the frontend env.')
+      enqueueSnackbar('Vibecheck app id is not configured. Set VITE_VIBECHECK_APP_ID in the frontend env.', {
+        variant: 'error',
+      })
+      setIsOnChainProfilesStale(true)
+      return
+    }
+
+    const requestId = onChainProfilesRequestId.current + 1
+    onChainProfilesRequestId.current = requestId
+
+    setIsLoadingOnChainProfiles(true)
+    setOnChainError(null)
+
+    try {
+      const profiles = await collectProfilesFromChain(onChainAppClient, trimmedSeed, scoreOptions.maxDepth)
+
+      if (requestId !== onChainProfilesRequestId.current) {
+        return
+      }
+
+      setOnChainProfiles(profiles)
+      setIsOnChainProfilesStale(false)
+      enqueueSnackbar(`Loaded ${profiles.length} profiles from app ${appId.toString()}`, { variant: 'success' })
+    } catch (error) {
+      if (requestId !== onChainProfilesRequestId.current) {
+        return
+      }
+
+      const message = error instanceof Error ? error.message : 'Failed to load on-chain profiles'
+      setOnChainError(message)
+      setIsOnChainProfilesStale(true)
+      enqueueSnackbar(message, { variant: 'error' })
+    } finally {
+      if (requestId === onChainProfilesRequestId.current) {
+        setIsLoadingOnChainProfiles(false)
+      }
+    }
+  }, [activeAddress, enqueueSnackbar, onChainAppClient, onChainAppId, scoreOptions.maxDepth, seedAccount])
+
+  const refreshProfileSummary = useCallback(async () => {
+    if (!activeAddress) {
+      resetProfileSummary()
+      setIsProfileSummaryStale(false)
+      return
+    }
+
+    if (!onChainAppClient) {
+      resetProfileSummary()
+      setProfileSummaryError('Vibecheck app id not configured')
+      setIsProfileSummaryStale(true)
+      return
+    }
+
+    const requestId = profileSummaryRequestId.current + 1
+    profileSummaryRequestId.current = requestId
+
+    setIsLoadingProfileSummary(true)
+    setProfileSummaryError(null)
+
+    try {
+      const [trustedAppsBoxValue, profileSnapshot, nextAsaOptInCount, nfdIdentity] = await Promise.all([
+        onChainAppClient.state.box.trustedApp.value(activeAddress),
+        readProfileSnapshot({
+          client: onChainAppClient,
+          account: activeAddress,
+        }),
+        fetchAsaOptInCount({
+          indexerServer: INDEXER_CONFIG.server,
+          indexerPort: INDEXER_CONFIG.port,
+          indexerToken: INDEXER_CONFIG.token,
+          address: activeAddress,
+        }),
+        fetchNfdData(ALGOD_CONFIG.network, activeAddress),
+      ])
+
+      if (requestId !== profileSummaryRequestId.current) {
+        return
+      }
+
+      const profileExists = trustedAppsBoxValue !== undefined
+
+      setIsProfileInitialized(profileExists)
+      setTrustedAppCount(profileSnapshot.trustedApps.length)
+      setTrustedAsaCount(profileSnapshot.trustedAsas.length)
+      setTrustedPeerCount(profileSnapshot.trustedPeers.length)
+      setAsaOptInCount(nextAsaOptInCount)
+      setNfdName(nfdIdentity?.name ?? '')
+      setNfdAvatarUrl(nfdIdentity?.avatarUrl ?? '')
+      setIsProfileSummaryStale(false)
+    } catch (error) {
+      if (requestId !== profileSummaryRequestId.current) {
+        return
+      }
+
+      const message = error instanceof Error ? error.message : 'Failed to load profile overview'
+      resetProfileSummary()
+      setProfileSummaryError(message)
+      setIsProfileSummaryStale(true)
+    } finally {
+      if (requestId === profileSummaryRequestId.current) {
+        setIsLoadingProfileSummary(false)
+      }
+    }
+  }, [activeAddress, onChainAppClient, resetProfileSummary])
 
   useEffect(() => {
-    let cancelled = false
+    onChainProfilesRequestId.current += 1
+    setIsOnChainProfilesStale(true)
+  }, [activeAddress, onChainAppId, scoreOptions.maxDepth, seedAccount])
 
-    const resetProfileSummary = () => {
-      setIsLoadingProfileSummary(false)
-      setProfileSummaryError(null)
-      setIsProfileInitialized(null)
-      setTrustedAppCount(0)
-      setTrustedAsaCount(0)
-      setTrustedPeerCount(0)
-      setAsaOptInCount(0)
-      setNfdName('')
-      setNfdAvatarUrl('')
+  useEffect(() => {
+    profileSummaryRequestId.current += 1
+    resetProfileSummary()
+
+    if (!activeAddress) {
+      setIsProfileSummaryStale(false)
+      return
     }
 
-    const loadProfileSummary = async () => {
-      if (!activeAddress) {
-        resetProfileSummary()
-        return
-      }
-
-      const appId = parsePositiveBigInt(onChainAppId.trim())
-      if (!appId) {
-        if (!cancelled) {
-          setProfileSummaryError('Vibecheck app id not configured')
-          setIsProfileInitialized(null)
-          setTrustedAppCount(0)
-          setTrustedAsaCount(0)
-          setTrustedPeerCount(0)
-          setAsaOptInCount(0)
-          setNfdName('')
-          setNfdAvatarUrl('')
-        }
-        return
-      }
-
-      setIsLoadingProfileSummary(true)
-      setProfileSummaryError(null)
-
-      try {
-        const factory = new VibecheckFactory({
-          algorand,
-          defaultSender: activeAddress,
-        })
-        const appClient = factory.getAppClientById({ appId })
-
-        const [trustedAppsBoxValue, trustedAsasBoxValue, trustedPeersBoxValue, nextAsaOptInCount, nfdIdentity] = await Promise.all([
-          appClient.state.box.trustedApp.value(activeAddress),
-          appClient.state.box.trustedAsa.value(activeAddress),
-          appClient.state.box.adjacencyList.value(activeAddress),
-          fetchAsaOptInCount({
-            indexerServer: indexerConfig.server,
-            indexerPort: indexerConfig.port,
-            indexerToken: indexerConfig.token,
-            address: activeAddress,
-          }),
-          fetchNfdData(algodConfig.network, activeAddress),
-        ])
-
-        if (cancelled) {
-          return
-        }
-
-        const profileExists = trustedAppsBoxValue !== undefined || trustedAsasBoxValue !== undefined || trustedPeersBoxValue !== undefined
-
-        setIsProfileInitialized(profileExists)
-        setTrustedAppCount(trustedAppsBoxValue?.length ?? 0)
-        setTrustedAsaCount(trustedAsasBoxValue?.length ?? 0)
-        setTrustedPeerCount(trustedPeersBoxValue?.length ?? 0)
-        setAsaOptInCount(nextAsaOptInCount)
-        setNfdName(nfdIdentity?.name ?? '')
-        setNfdAvatarUrl(nfdIdentity?.avatarUrl ?? '')
-      } catch (error) {
-        if (cancelled) {
-          return
-        }
-
-        const message = error instanceof Error ? error.message : 'Failed to load profile overview'
-        setProfileSummaryError(message)
-        setIsProfileInitialized(null)
-        setTrustedAppCount(0)
-        setTrustedAsaCount(0)
-        setTrustedPeerCount(0)
-        setAsaOptInCount(0)
-        setNfdName('')
-        setNfdAvatarUrl('')
-      } finally {
-        if (!cancelled) {
-          setIsLoadingProfileSummary(false)
-        }
-      }
-    }
-
-    void loadProfileSummary()
-
-    return () => {
-      cancelled = true
-    }
-  }, [
-    activeAddress,
-    algodConfig.network,
-    algorand,
-    indexerConfig.port,
-    indexerConfig.server,
-    indexerConfig.token,
-    onChainAppId,
-    onChainProfiles,
-  ])
+    setIsProfileSummaryStale(true)
+  }, [activeAddress, onChainAppId, resetProfileSummary])
 
   const peerInviteLink = useMemo(() => {
     if (!activeAddress) {
@@ -575,8 +576,10 @@ export function useTrustDemoData({ activeAddress, enqueueSnackbar }: UseTrustDem
     onChainAppId,
     onChainProfiles,
     isLoadingOnChainProfiles,
+    isOnChainProfilesStale,
     onChainError,
     isLoadingProfileSummary,
+    isProfileSummaryStale,
     profileSummaryError,
     isProfileInitialized,
     trustedAppCount,
@@ -595,6 +598,8 @@ export function useTrustDemoData({ activeAddress, enqueueSnackbar }: UseTrustDem
     activeAnalysis,
     peerInviteLink,
     peerInviteQrUrl,
-    loadOnChainProfiles,
+    refreshOnChainProfiles,
+    refreshProfileSummary,
+    markTrustDataStale,
   }
 }

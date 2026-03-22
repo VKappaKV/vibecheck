@@ -15,6 +15,7 @@ interface LiveDataControlsProps {
   onSelectAssetId: (value: bigint) => void
   onChainAppId: string
   isLoadingOnChainProfiles: boolean
+  isOnChainProfilesStale: boolean
   onRefreshProfiles: () => void
   onCopyShareUrl: () => void
   loadedProfiles: number
@@ -34,6 +35,7 @@ export function LiveDataControls({
   onSelectAssetId,
   onChainAppId,
   isLoadingOnChainProfiles,
+  isOnChainProfilesStale,
   onRefreshProfiles,
   onCopyShareUrl,
   loadedProfiles,
@@ -114,6 +116,7 @@ export function LiveDataControls({
 
       <div className="flex flex-wrap items-center gap-2">
         <Badge variant="outline">Loaded profiles: {loadedProfiles}</Badge>
+        {isOnChainProfilesStale && <Badge variant="outline">Refresh needed</Badge>}
         {!hasActiveAddress && <Badge variant="outline">Connect wallet to read and update profiles</Badge>}
         {onChainError && <Badge variant="outline">Error: {onChainError}</Badge>}
       </div>

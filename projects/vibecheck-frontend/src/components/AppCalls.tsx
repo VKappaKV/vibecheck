@@ -59,6 +59,7 @@ const AppCalls = () => {
           <ProfileOverviewPanel
             activeAddress={demo.activeAddress}
             isLoadingProfileSummary={demo.isLoadingProfileSummary}
+            isProfileSummaryStale={demo.isProfileSummaryStale}
             profileSummaryError={demo.profileSummaryError}
             isProfileInitialized={demo.isProfileInitialized}
             nfdName={demo.nfdName}
@@ -69,6 +70,7 @@ const AppCalls = () => {
             trustedPeerCount={demo.trustedPeerCount}
             peerInviteQrUrl={demo.peerInviteQrUrl}
             peerInviteLink={demo.peerInviteLink}
+            onRefreshProfileSummary={demo.refreshProfileSummary}
             onCopyPeerInviteLink={demo.copyPeerInviteLink}
           />
         )}
@@ -106,7 +108,8 @@ const AppCalls = () => {
               onSelectAssetId={demo.setSelectedAssetId}
               onChainAppId={demo.onChainAppId}
               isLoadingOnChainProfiles={demo.isLoadingOnChainProfiles}
-              onRefreshProfiles={() => void demo.loadOnChainProfiles()}
+              isOnChainProfilesStale={demo.isOnChainProfilesStale}
+              onRefreshProfiles={() => void demo.refreshOnChainProfiles()}
               onCopyShareUrl={() => void demo.copyShareLink()}
               loadedProfiles={demo.onChainProfiles.length}
               hasActiveAddress={Boolean(demo.activeAddress)}

@@ -24,7 +24,7 @@ interface UseTrustProfileMutationsArgs {
   mutationAsaIdInput: string
   mutationPeerInput: string
   enqueueSnackbar: EnqueueSnackbar
-  refreshProfiles: () => Promise<void>
+  onMutationSuccess: () => void
 }
 
 export function useTrustProfileMutations({
@@ -36,7 +36,7 @@ export function useTrustProfileMutations({
   mutationAsaIdInput,
   mutationPeerInput,
   enqueueSnackbar,
-  refreshProfiles,
+  onMutationSuccess,
 }: UseTrustProfileMutationsArgs) {
   const [isMutatingProfile, setIsMutatingProfile] = useState<boolean>(false)
 
@@ -74,8 +74,10 @@ export function useTrustProfileMutations({
       setIsMutatingProfile(true)
       try {
         await mutation(context)
-        enqueueSnackbar(successMessage, { variant: 'success' })
-        await refreshProfiles()
+        enqueueSnackbar(`${successMessage}. Refresh the overview or network panel to load the latest on-chain state.`, {
+          variant: 'success',
+        })
+        onMutationSuccess()
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Profile update failed'
         enqueueSnackbar(message, { variant: 'error' })
@@ -83,7 +85,7 @@ export function useTrustProfileMutations({
         setIsMutatingProfile(false)
       }
     },
-    [enqueueSnackbar, getOnChainClientContext, refreshProfiles],
+    [enqueueSnackbar, getOnChainClientContext, onMutationSuccess],
   )
 
   const initProfile = async () => {

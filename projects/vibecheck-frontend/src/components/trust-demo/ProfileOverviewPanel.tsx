@@ -9,6 +9,7 @@ import { Input } from '../ui/input'
 interface ProfileOverviewPanelProps {
   activeAddress: string | null
   isLoadingProfileSummary: boolean
+  isProfileSummaryStale: boolean
   profileSummaryError: string | null
   isProfileInitialized: boolean | null
   nfdName: string
@@ -19,6 +20,7 @@ interface ProfileOverviewPanelProps {
   trustedPeerCount: number
   peerInviteQrUrl: string
   peerInviteLink: string
+  onRefreshProfileSummary: () => Promise<void>
   onCopyPeerInviteLink: () => Promise<void>
 }
 
@@ -39,6 +41,7 @@ const Metric = ({ label, value }: MetricProps) => {
 export function ProfileOverviewPanel({
   activeAddress,
   isLoadingProfileSummary,
+  isProfileSummaryStale,
   profileSummaryError,
   isProfileInitialized,
   nfdName,
@@ -49,6 +52,7 @@ export function ProfileOverviewPanel({
   trustedPeerCount,
   peerInviteQrUrl,
   peerInviteLink,
+  onRefreshProfileSummary,
   onCopyPeerInviteLink,
 }: ProfileOverviewPanelProps) {
   if (!activeAddress) {
@@ -143,10 +147,16 @@ export function ProfileOverviewPanel({
           </div>
         </div>
 
-        <Badge variant={isProfileInitialized ? 'secondary' : 'outline'} className="w-fit gap-1">
-          <InitializationIcon className="h-3.5 w-3.5" />
-          {isLoadingProfileSummary ? 'Loading profile...' : initializationBadge.label}
-        </Badge>
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant={isProfileInitialized ? 'secondary' : 'outline'} className="w-fit gap-1">
+            <InitializationIcon className="h-3.5 w-3.5" />
+            {isLoadingProfileSummary ? 'Loading profile...' : initializationBadge.label}
+          </Badge>
+          {isProfileSummaryStale && !isLoadingProfileSummary && <Badge variant="outline">Refresh needed</Badge>}
+          <Button type="button" variant="outline" onClick={() => void onRefreshProfileSummary()} disabled={isLoadingProfileSummary}>
+            {isLoadingProfileSummary ? 'Loading profile...' : 'Refresh profile overview'}
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

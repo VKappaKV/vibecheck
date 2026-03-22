@@ -23,8 +23,10 @@ export interface TrustDemoState {
   onChainAppId: string
   onChainProfiles: TrustProfile[]
   isLoadingOnChainProfiles: boolean
+  isOnChainProfilesStale: boolean
   onChainError: string | null
   isLoadingProfileSummary: boolean
+  isProfileSummaryStale: boolean
   profileSummaryError: string | null
   isProfileInitialized: boolean | null
   trustedAppCount: number
@@ -49,7 +51,8 @@ export interface TrustDemoState {
   activeAnalysis: TrustNetworkAnalysis
   peerInviteLink: string
   peerInviteQrUrl: string
-  loadOnChainProfiles: () => Promise<void>
+  refreshOnChainProfiles: () => Promise<void>
+  refreshProfileSummary: () => Promise<void>
   initProfile: () => Promise<void>
   addTrustedApp: () => Promise<void>
   removeTrustedApp: () => Promise<void>
@@ -80,8 +83,8 @@ export function useTrustDemo(): TrustDemoState {
     mutationAsaIdInput,
     mutationPeerInput,
     enqueueSnackbar,
-    refreshProfiles: async () => {
-      await data.loadOnChainProfiles({ silent: true })
+    onMutationSuccess: () => {
+      data.markTrustDataStale()
     },
   })
 
@@ -137,8 +140,10 @@ export function useTrustDemo(): TrustDemoState {
     onChainAppId: data.onChainAppId,
     onChainProfiles: data.onChainProfiles,
     isLoadingOnChainProfiles: data.isLoadingOnChainProfiles,
+    isOnChainProfilesStale: data.isOnChainProfilesStale,
     onChainError: data.onChainError,
     isLoadingProfileSummary: data.isLoadingProfileSummary,
+    isProfileSummaryStale: data.isProfileSummaryStale,
     profileSummaryError: data.profileSummaryError,
     isProfileInitialized: data.isProfileInitialized,
     trustedAppCount: data.trustedAppCount,
@@ -163,9 +168,8 @@ export function useTrustDemo(): TrustDemoState {
     activeAnalysis: data.activeAnalysis,
     peerInviteLink: data.peerInviteLink,
     peerInviteQrUrl: data.peerInviteQrUrl,
-    loadOnChainProfiles: async () => {
-      await data.loadOnChainProfiles()
-    },
+    refreshOnChainProfiles: data.refreshOnChainProfiles,
+    refreshProfileSummary: data.refreshProfileSummary,
     initProfile: mutations.initProfile,
     addTrustedApp: mutations.addTrustedApp,
     removeTrustedApp: mutations.removeTrustedApp,
