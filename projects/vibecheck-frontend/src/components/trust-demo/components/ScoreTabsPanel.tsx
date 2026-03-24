@@ -1,7 +1,7 @@
-import { Badge } from '../ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
-import { toPercent } from './parsers'
-import { ScoreEntry, ScoreTab } from './types'
+import { Badge } from '../../ui/badge'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs'
+import { parseScoreTab, toPercent } from '../utils/parsers'
+import { ScoreEntry, ScoreTab } from '../types'
 
 interface ScoreTabsPanelProps {
   tabValue: ScoreTab
@@ -61,7 +61,7 @@ function ScoreContent({ scores, idPrefix }: { scores: ScoreEntry[]; idPrefix: 'A
 
 export function ScoreTabsPanel({ tabValue, onTabChange, appScores, assetScores }: ScoreTabsPanelProps) {
   return (
-    <Tabs value={tabValue} onValueChange={(value) => onTabChange(value as ScoreTab)}>
+    <Tabs value={tabValue} onValueChange={(value) => onTabChange(parseScoreTab(value))}>
       <TabsList className="grid w-full grid-cols-2">
         <TabsTrigger value="apps">APP scores</TabsTrigger>
         <TabsTrigger value="assets">ASA scores</TabsTrigger>

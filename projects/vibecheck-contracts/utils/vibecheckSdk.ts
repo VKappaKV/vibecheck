@@ -2,6 +2,7 @@ import { microAlgo } from '@algorandfoundation/algokit-utils'
 import type { AlgorandClient } from '@algorandfoundation/algokit-utils/types/algorand-client'
 import { VibecheckClient, VibecheckFactory } from '../smart_contracts/artifacts/vibecheck/VibecheckClient'
 import { DEFAULT_PROFILE_INIT_MBR_PAYMENT } from './algorand'
+import { readProfileSnapshot } from './readProfileSnapshot'
 import { TrustProfile } from './trustScoring'
 
 export interface AddTrustParams {
@@ -115,26 +116,6 @@ export class VibecheckSdk {
   }
 
   public async getProfile(client: VibecheckClient, account: string, sender: string): Promise<TrustProfile> {
-    const trustedApps = await client.send.getTrustedApp({
-      sender,
-      args: { account },
-    })
-
-    const trustedAsas = await client.send.getTrustedAsa({
-      sender,
-      args: { account },
-    })
-
-    const trustedPeers = await client.send.getAdjacencyList({
-      sender,
-      args: { account },
-    })
-
-    return {
-      account,
-      trustedApps: trustedApps.return ?? [],
-      trustedAsas: trustedAsas.return ?? [],
-      trustedPeers: trustedPeers.return ?? [],
-    }
+    return readProfileSnapshot(client, account, sender)
   }
 }

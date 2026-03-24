@@ -2,9 +2,9 @@ import { AlgorandClient, microAlgo } from '@algorandfoundation/algokit-utils'
 import { useWallet } from '@txnlab/use-wallet-react'
 import { isValidAddress } from 'algosdk'
 import { useCallback, useState } from 'react'
-import { VibecheckClient, VibecheckFactory } from '../../contracts/Vibecheck'
-import { PROFILE_INIT_MBR } from './constants'
-import { parsePositiveBigInt } from './parsers'
+import { VibecheckClient } from '../../../contracts/Vibecheck'
+import { PROFILE_INIT_MBR } from '../constants'
+import { parsePositiveBigInt } from '../utils/parsers'
 
 type WalletSigner = ReturnType<typeof useWallet>['transactionSigner']
 type EnqueueSnackbar = (message: string, options?: { variant?: 'default' | 'error' | 'success' | 'warning' | 'info' }) => void
@@ -19,24 +19,31 @@ interface UseTrustProfileMutationsArgs {
   algorand: AlgorandClient
   activeAddress: string | null
   transactionSigner: WalletSigner
-  onChainAppId: string
+  onChainAppClient: VibecheckClient | null
   mutationAppIdInput: string
   mutationAsaIdInput: string
   mutationPeerInput: string
   enqueueSnackbar: EnqueueSnackbar
-  refreshProfiles: () => Promise<void>
+  onMutationSuccess: () => void
+}
+
+interface RunIdMutationArgs {
+  rawValue: string
+  resourceLabel: 'APP' | 'ASA'
+  successMessage: (resourceId: bigint) => string
+  mutation: (context: OnChainClientContext, resourceId: bigint) => Promise<unknown>
 }
 
 export function useTrustProfileMutations({
   algorand,
   activeAddress,
   transactionSigner,
-  onChainAppId,
+  onChainAppClient,
   mutationAppIdInput,
   mutationAsaIdInput,
   mutationPeerInput,
   enqueueSnackbar,
-  refreshProfiles,
+  onMutationSuccess,
 }: UseTrustProfileMutationsArgs) {
   const [isMutatingProfile, setIsMutatingProfile] = useState<boolean>(false)
 
@@ -46,23 +53,17 @@ export function useTrustProfileMutations({
       return null
     }
 
-    const appId = parsePositiveBigInt(onChainAppId.trim())
-    if (!appId) {
+    if (!onChainAppClient) {
       enqueueSnackbar('Vibecheck app id is not configured. Set VITE_VIBECHECK_APP_ID in the frontend env.', { variant: 'error' })
       return null
     }
 
-    const factory = new VibecheckFactory({
-      algorand,
-      defaultSender: activeAddress,
-    })
-
     return {
-      appClient: factory.getAppClientById({ appId }),
+      appClient: onChainAppClient,
       sender: activeAddress,
       signer: transactionSigner,
     }
-  }, [activeAddress, algorand, enqueueSnackbar, onChainAppId, transactionSigner])
+  }, [activeAddress, enqueueSnackbar, onChainAppClient, transactionSigner])
 
   const runProfileMutation = useCallback(
     async (successMessage: string, mutation: (context: OnChainClientContext) => Promise<unknown>) => {
@@ -74,8 +75,10 @@ export function useTrustProfileMutations({
       setIsMutatingProfile(true)
       try {
         await mutation(context)
-        enqueueSnackbar(successMessage, { variant: 'success' })
-        await refreshProfiles()
+        enqueueSnackbar(`${successMessage}. Refresh the overview or network panel to load the latest on-chain state.`, {
+          variant: 'success',
+        })
+        onMutationSuccess()
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Profile update failed'
         enqueueSnackbar(message, { variant: 'error' })
@@ -83,7 +86,20 @@ export function useTrustProfileMutations({
         setIsMutatingProfile(false)
       }
     },
-    [enqueueSnackbar, getOnChainClientContext, refreshProfiles],
+    [enqueueSnackbar, getOnChainClientContext, onMutationSuccess],
+  )
+
+  const runIdMutation = useCallback(
+    async ({ rawValue, resourceLabel, successMessage, mutation }: RunIdMutationArgs) => {
+      const resourceId = parsePositiveBigInt(rawValue.trim())
+      if (!resourceId) {
+        enqueueSnackbar(`${resourceLabel} id must be a positive integer`, { variant: 'error' })
+        return
+      }
+
+      await runProfileMutation(successMessage(resourceId), (context) => mutation(context, resourceId))
+    },
+    [enqueueSnackbar, runProfileMutation],
   )
 
   const initProfile = async () => {
@@ -103,66 +119,62 @@ export function useTrustProfileMutations({
   }
 
   const addTrustedApp = async () => {
-    const appId = parsePositiveBigInt(mutationAppIdInput.trim())
-    if (!appId) {
-      enqueueSnackbar('APP id must be a positive integer', { variant: 'error' })
-      return
-    }
-
-    await runProfileMutation(`Added APP ${appId.toString()} to your trust list`, async ({ appClient, sender, signer }) => {
-      await appClient.send.addTrustedApps({
-        sender,
-        signer,
-        args: { apps: [appId] },
-      })
+    await runIdMutation({
+      rawValue: mutationAppIdInput,
+      resourceLabel: 'APP',
+      successMessage: (appId) => `Added APP ${appId.toString()} to your trust list`,
+      mutation: async ({ appClient, sender, signer }, appId) => {
+        await appClient.send.addTrustedApps({
+          sender,
+          signer,
+          args: { apps: [appId] },
+        })
+      },
     })
   }
 
   const removeTrustedApp = async () => {
-    const appId = parsePositiveBigInt(mutationAppIdInput.trim())
-    if (!appId) {
-      enqueueSnackbar('APP id must be a positive integer', { variant: 'error' })
-      return
-    }
-
-    await runProfileMutation(`Removed APP ${appId.toString()} from your trust list`, async ({ appClient, sender, signer }) => {
-      await appClient.send.removeApp({
-        sender,
-        signer,
-        args: { app: appId },
-      })
+    await runIdMutation({
+      rawValue: mutationAppIdInput,
+      resourceLabel: 'APP',
+      successMessage: (appId) => `Removed APP ${appId.toString()} from your trust list`,
+      mutation: async ({ appClient, sender, signer }, appId) => {
+        await appClient.send.removeApp({
+          sender,
+          signer,
+          args: { app: appId },
+        })
+      },
     })
   }
 
   const addTrustedAsa = async () => {
-    const asaId = parsePositiveBigInt(mutationAsaIdInput.trim())
-    if (!asaId) {
-      enqueueSnackbar('ASA id must be a positive integer', { variant: 'error' })
-      return
-    }
-
-    await runProfileMutation(`Added ASA ${asaId.toString()} to your trust list`, async ({ appClient, sender, signer }) => {
-      await appClient.send.addTrustedAsas({
-        sender,
-        signer,
-        args: { assets: [asaId] },
-      })
+    await runIdMutation({
+      rawValue: mutationAsaIdInput,
+      resourceLabel: 'ASA',
+      successMessage: (asaId) => `Added ASA ${asaId.toString()} to your trust list`,
+      mutation: async ({ appClient, sender, signer }, asaId) => {
+        await appClient.send.addTrustedAsas({
+          sender,
+          signer,
+          args: { assets: [asaId] },
+        })
+      },
     })
   }
 
   const removeTrustedAsa = async () => {
-    const asaId = parsePositiveBigInt(mutationAsaIdInput.trim())
-    if (!asaId) {
-      enqueueSnackbar('ASA id must be a positive integer', { variant: 'error' })
-      return
-    }
-
-    await runProfileMutation(`Removed ASA ${asaId.toString()} from your trust list`, async ({ appClient, sender, signer }) => {
-      await appClient.send.removeAsa({
-        sender,
-        signer,
-        args: { asset: asaId },
-      })
+    await runIdMutation({
+      rawValue: mutationAsaIdInput,
+      resourceLabel: 'ASA',
+      successMessage: (asaId) => `Removed ASA ${asaId.toString()} from your trust list`,
+      mutation: async ({ appClient, sender, signer }, asaId) => {
+        await appClient.send.removeAsa({
+          sender,
+          signer,
+          args: { asset: asaId },
+        })
+      },
     })
   }
 
