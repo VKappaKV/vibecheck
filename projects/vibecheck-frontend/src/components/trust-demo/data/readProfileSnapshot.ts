@@ -1,7 +1,7 @@
 import { isValidAddress } from 'algosdk'
-import { VibecheckClient } from '../../contracts/Vibecheck'
-import { TrustProfile } from '../../utils/trustScores'
-import { ZERO_ADDRESS } from './constants'
+import { VibecheckClient } from '../../../contracts/Vibecheck'
+import { TrustProfile } from '../../../utils/trustScores'
+import { ZERO_ADDRESS } from '../constants'
 
 interface ReadProfileSnapshotArgs {
   client: VibecheckClient

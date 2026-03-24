@@ -1,10 +1,9 @@
 import { Copy, QrCode, ShieldCheck, ShieldOff, UserCircle2 } from 'lucide-react'
-import { useMemo } from 'react'
-import { ellipseAddress } from '../../utils/ellipseAddress'
-import { Badge } from '../ui/badge'
-import { Button } from '../ui/button'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog'
-import { Input } from '../ui/input'
+import { ellipseAddress } from '../../../utils/ellipseAddress'
+import { Badge } from '../../ui/badge'
+import { Button } from '../../ui/button'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../../ui/dialog'
+import { Input } from '../../ui/input'
 
 interface ProfileOverviewPanelProps {
   activeAddress: string | null
@@ -55,27 +54,7 @@ export function ProfileOverviewPanel({
   onRefreshProfileSummary,
   onCopyPeerInviteLink,
 }: ProfileOverviewPanelProps) {
-  if (!activeAddress) {
-    return (
-      <div className="rounded-sm border-2 border-dashed border-border bg-background/70 p-4 text-sm text-muted-foreground">
-        Connect a wallet to view your trust profile, NFD identity, and on-chain counts.
-      </div>
-    )
-  }
-
-  const displayName = nfdName || ellipseAddress(activeAddress, 9)
-  const derivedPeerInviteLink = useMemo(() => {
-    const inviteUrl = new URL(window.location.href)
-    inviteUrl.searchParams.set('seed', activeAddress)
-    inviteUrl.searchParams.set('tab', 'apps')
-    inviteUrl.searchParams.set('invitePeer', activeAddress)
-
-    return inviteUrl.toString()
-  }, [activeAddress])
-  const effectivePeerInviteLink = peerInviteLink || derivedPeerInviteLink
-  const effectivePeerInviteQrUrl =
-    peerInviteQrUrl ||
-    `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=10&data=${encodeURIComponent(effectivePeerInviteLink)}`
+  const displayName = activeAddress ? nfdName || ellipseAddress(activeAddress, 9) : ''
   const initializationBadge =
     isProfileInitialized === null
       ? { label: 'Unknown', icon: ShieldOff }
@@ -83,6 +62,14 @@ export function ProfileOverviewPanel({
         ? { label: 'Initialized', icon: ShieldCheck }
         : { label: 'Not initialized', icon: ShieldOff }
   const InitializationIcon = initializationBadge.icon
+
+  if (!activeAddress) {
+    return (
+      <div className="rounded-sm border-2 border-dashed border-border bg-background/70 p-4 text-sm text-muted-foreground">
+        Connect a wallet to view your trust profile, NFD identity, and on-chain counts.
+      </div>
+    )
+  }
 
   return (
     <div className="grid gap-4 rounded-sm border-2 border-border bg-card/70 p-4">
@@ -114,9 +101,9 @@ export function ProfileOverviewPanel({
                     <DialogDescription>Scan to open the demo with your address prefilled as peer.</DialogDescription>
                   </DialogHeader>
 
-                  {effectivePeerInviteQrUrl ? (
+                  {peerInviteQrUrl ? (
                     <img
-                      src={effectivePeerInviteQrUrl}
+                      src={peerInviteQrUrl}
                       alt="Peer invite QR code"
                       width={280}
                       height={280}
@@ -127,13 +114,13 @@ export function ProfileOverviewPanel({
                   )}
 
                   <div className="mt-2 flex items-center gap-2">
-                    <Input readOnly value={effectivePeerInviteLink} placeholder="Unable to generate invite URL" />
+                    <Input readOnly value={peerInviteLink} placeholder="Unable to generate invite URL" />
                     <Button
                       type="button"
                       size="icon"
                       variant="secondary"
                       onClick={() => void onCopyPeerInviteLink()}
-                      disabled={!effectivePeerInviteLink}
+                      disabled={!peerInviteLink}
                       aria-label="Copy invite URL"
                       title="Copy invite URL"
                     >

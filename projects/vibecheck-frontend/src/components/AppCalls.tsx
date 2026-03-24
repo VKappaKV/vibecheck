@@ -1,10 +1,12 @@
 import { useState } from 'react'
-import { LiveDataControls } from './trust-demo/LiveDataControls'
-import { ProfileOverviewPanel } from './trust-demo/ProfileOverviewPanel'
-import { ProfileManagementPanel } from './trust-demo/ProfileManagementPanel'
-import { ScoreTabsPanel } from './trust-demo/ScoreTabsPanel'
-import { TrustDemoSection } from './trust-demo/types'
-import { useTrustDemo } from './trust-demo/useTrustDemo'
+import {
+  LiveDataControls,
+  ProfileOverviewPanel,
+  ProfileManagementPanel,
+  ScoreTabsPanel,
+  type TrustDemoSection,
+  useTrustDemo,
+} from './trust-demo'
 import { TrustNetworkAnalysis } from './TrustNetworkAnalysis'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
 
@@ -55,83 +57,17 @@ const AppCalls = () => {
           </ol>
         </nav>
 
-        {activeSection === 'profile' && (
-          <ProfileOverviewPanel
-            activeAddress={demo.activeAddress}
-            isLoadingProfileSummary={demo.isLoadingProfileSummary}
-            isProfileSummaryStale={demo.isProfileSummaryStale}
-            profileSummaryError={demo.profileSummaryError}
-            isProfileInitialized={demo.isProfileInitialized}
-            nfdName={demo.nfdName}
-            nfdAvatarUrl={demo.nfdAvatarUrl}
-            asaOptInCount={demo.asaOptInCount}
-            trustedAppCount={demo.trustedAppCount}
-            trustedAsaCount={demo.trustedAsaCount}
-            trustedPeerCount={demo.trustedPeerCount}
-            peerInviteQrUrl={demo.peerInviteQrUrl}
-            peerInviteLink={demo.peerInviteLink}
-            onRefreshProfileSummary={demo.refreshProfileSummary}
-            onCopyPeerInviteLink={demo.copyPeerInviteLink}
-          />
-        )}
+        {activeSection === 'profile' && <ProfileOverviewPanel {...demo.profileOverview} />}
 
-        {activeSection === 'add-trusted' && (
-          <ProfileManagementPanel
-            isMutatingProfile={demo.isMutatingProfile}
-            onInitProfile={demo.initProfile}
-            mutationAppIdInput={demo.mutationAppIdInput}
-            onMutationAppIdChange={demo.setMutationAppIdInput}
-            onAddTrustedApp={demo.addTrustedApp}
-            onRemoveTrustedApp={demo.removeTrustedApp}
-            mutationAsaIdInput={demo.mutationAsaIdInput}
-            onMutationAsaIdChange={demo.setMutationAsaIdInput}
-            onAddTrustedAsa={demo.addTrustedAsa}
-            onRemoveTrustedAsa={demo.removeTrustedAsa}
-            mutationPeerInput={demo.mutationPeerInput}
-            onMutationPeerChange={demo.setMutationPeerInput}
-            onAddTrustedPeer={demo.addTrustedPeer}
-            onRemoveTrustedPeer={demo.removeTrustedPeer}
-          />
-        )}
+        {activeSection === 'add-trusted' && <ProfileManagementPanel {...demo.profileManagement} />}
 
         {activeSection === 'analyze-network' && (
           <>
-            <LiveDataControls
-              seedAccount={demo.seedAccount}
-              seedAccounts={demo.seedAccounts}
-              onSeedAccountChange={demo.setSeedAccount}
-              appTargets={demo.appTargets}
-              selectedAppId={demo.selectedAppId}
-              onSelectAppId={demo.setSelectedAppId}
-              assetTargets={demo.assetTargets}
-              selectedAssetId={demo.selectedAssetId}
-              onSelectAssetId={demo.setSelectedAssetId}
-              onChainAppId={demo.onChainAppId}
-              isLoadingOnChainProfiles={demo.isLoadingOnChainProfiles}
-              isOnChainProfilesStale={demo.isOnChainProfilesStale}
-              onRefreshProfiles={() => void demo.refreshOnChainProfiles()}
-              onCopyShareUrl={() => void demo.copyShareLink()}
-              loadedProfiles={demo.onChainProfiles.length}
-              hasActiveAddress={Boolean(demo.activeAddress)}
-              onChainError={demo.onChainError}
-            />
+            <LiveDataControls {...demo.analysisSection.liveDataControls} />
 
-            <ScoreTabsPanel
-              tabValue={demo.tabValue}
-              onTabChange={demo.setTabValue}
-              appScores={demo.appScores}
-              assetScores={demo.assetScores}
-            />
+            <ScoreTabsPanel {...demo.analysisSection.scoreTabs} />
 
-            <TrustNetworkAnalysis
-              expanded={demo.analysisExpanded}
-              onToggle={() => demo.setAnalysisExpanded(!demo.analysisExpanded)}
-              options={demo.scoreOptions}
-              onOptionsChange={demo.setScoreOptions}
-              analysis={demo.activeAnalysis}
-              targetLabel={demo.activeTargetLabel}
-              targetTypeLabel={demo.tabValue === 'apps' ? 'APP' : 'ASA'}
-            />
+            <TrustNetworkAnalysis {...demo.analysisSection.networkAnalysis} />
           </>
         )}
       </CardContent>

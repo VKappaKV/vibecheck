@@ -1,7 +1,7 @@
-import { Badge } from '../ui/badge'
-import { Button } from '../ui/button'
-import { Input } from '../ui/input'
-import { ScoreTarget } from './types'
+import { Badge } from '../../ui/badge'
+import { Button } from '../../ui/button'
+import { Input } from '../../ui/input'
+import { ScoreTarget } from '../types'
 
 interface LiveDataControlsProps {
   seedAccount: string

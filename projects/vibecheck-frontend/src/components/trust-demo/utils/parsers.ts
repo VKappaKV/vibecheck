@@ -1,5 +1,5 @@
-import { TrustScoreOptions } from '../../utils/trustScores'
-import { ScoreTab } from './types'
+import { TrustScoreOptions } from '../../../utils/trustScores'
+import { ScoreTab } from '../types'
 
 export function parseScoreTab(value: string | null): ScoreTab {
   return value === 'assets' ? 'assets' : 'apps'

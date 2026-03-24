@@ -1,15 +1,11 @@
-import { VibecheckClient } from '../../contracts/Vibecheck'
-import { TrustProfile } from '../../utils/trustScores'
+import { VibecheckClient } from '../../../contracts/Vibecheck'
+import { TrustProfile } from '../../../utils/trustScores'
 import { readProfileSnapshot } from './readProfileSnapshot'
 
 /**
  * Walk trusted peers breadth-first so score calculations use real graph topology.
  */
-export async function collectProfilesFromChain(
-  client: VibecheckClient,
-  seedAccount: string,
-  maxDepth: number,
-): Promise<TrustProfile[]> {
+export async function collectProfilesFromChain(client: VibecheckClient, seedAccount: string, maxDepth: number): Promise<TrustProfile[]> {
   const visited = new Set<string>()
   const queued = new Set<string>([seedAccount])
   const queue: Array<{ account: string; depth: number }> = [{ account: seedAccount, depth: 0 }]

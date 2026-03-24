@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { AppWindow, Coins, Users, type LucideIcon } from 'lucide-react'
-import { Button } from '../ui/button'
-import { Input } from '../ui/input'
+import { Button } from '../../ui/button'
+import { Input } from '../../ui/input'
 
 interface ProfileManagementPanelProps {
   isMutatingProfile: boolean
@@ -41,6 +41,25 @@ interface MutationTargetOption {
   label: string
   icon: LucideIcon
 }
+
+interface MutationRowConfig {
+  fieldId: string
+  label: string
+  placeholder: string
+  value: string
+  onChange: (value: string) => void
+  addLabel: string
+  removeLabel: string
+  onAdd: () => Promise<void>
+  onRemove: () => Promise<void>
+  type: 'text' | 'number'
+}
+
+const MUTATION_TARGET_OPTIONS: MutationTargetOption[] = [
+  { id: 'peer', label: 'Peer', icon: Users },
+  { id: 'asa', label: 'ASA', icon: Coins },
+  { id: 'app', label: 'APP', icon: AppWindow },
+]
 
 function MutationRow({
   fieldId,
@@ -96,54 +115,46 @@ export function ProfileManagementPanel({
 }: ProfileManagementPanelProps) {
   const [activeMutationTarget, setActiveMutationTarget] = useState<MutationTarget>('peer')
 
-  const mutationTargetOptions: MutationTargetOption[] = useMemo(
-    () => [
-      { id: 'peer', label: 'Peer', icon: Users },
-      { id: 'asa', label: 'ASA', icon: Coins },
-      { id: 'app', label: 'APP', icon: AppWindow },
-    ],
-    [],
-  )
+  const mutationRowsByTarget: Record<MutationTarget, MutationRowConfig> = {
+    app: {
+      fieldId: 'mutation-app-id',
+      label: 'APP id',
+      placeholder: 'e.g. 12345',
+      value: mutationAppIdInput,
+      onChange: onMutationAppIdChange,
+      addLabel: 'Add APP',
+      removeLabel: 'Remove APP',
+      onAdd: onAddTrustedApp,
+      onRemove: onRemoveTrustedApp,
+      type: 'number',
+    },
+    asa: {
+      fieldId: 'mutation-asa-id',
+      label: 'ASA id',
+      placeholder: 'e.g. 31566704',
+      value: mutationAsaIdInput,
+      onChange: onMutationAsaIdChange,
+      addLabel: 'Add ASA',
+      removeLabel: 'Remove ASA',
+      onAdd: onAddTrustedAsa,
+      onRemove: onRemoveTrustedAsa,
+      type: 'number',
+    },
+    peer: {
+      fieldId: 'mutation-peer-address',
+      label: 'Peer address',
+      placeholder: 'Algorand address',
+      value: mutationPeerInput,
+      onChange: onMutationPeerChange,
+      addLabel: 'Add peer',
+      removeLabel: 'Remove peer',
+      onAdd: onAddTrustedPeer,
+      onRemove: onRemoveTrustedPeer,
+      type: 'text',
+    },
+  }
 
-  const mutationRow =
-    activeMutationTarget === 'app'
-      ? {
-          fieldId: 'mutation-app-id',
-          label: 'APP id',
-          placeholder: 'e.g. 12345',
-          value: mutationAppIdInput,
-          onChange: onMutationAppIdChange,
-          addLabel: 'Add APP',
-          removeLabel: 'Remove APP',
-          onAdd: onAddTrustedApp,
-          onRemove: onRemoveTrustedApp,
-          type: 'number' as const,
-        }
-      : activeMutationTarget === 'asa'
-        ? {
-            fieldId: 'mutation-asa-id',
-            label: 'ASA id',
-            placeholder: 'e.g. 31566704',
-            value: mutationAsaIdInput,
-            onChange: onMutationAsaIdChange,
-            addLabel: 'Add ASA',
-            removeLabel: 'Remove ASA',
-            onAdd: onAddTrustedAsa,
-            onRemove: onRemoveTrustedAsa,
-            type: 'number' as const,
-          }
-        : {
-            fieldId: 'mutation-peer-address',
-            label: 'Peer address',
-            placeholder: 'Algorand address',
-            value: mutationPeerInput,
-            onChange: onMutationPeerChange,
-            addLabel: 'Add peer',
-            removeLabel: 'Remove peer',
-            onAdd: onAddTrustedPeer,
-            onRemove: onRemoveTrustedPeer,
-            type: 'text' as const,
-          }
+  const mutationRow = mutationRowsByTarget[activeMutationTarget]
 
   return (
     <div className="grid gap-4 rounded-sm border-2 border-border bg-card/70 p-3">
@@ -158,7 +169,7 @@ export function ProfileManagementPanel({
       </div>
 
       <div className="grid gap-2 sm:grid-cols-3">
-        {mutationTargetOptions.map((option) => {
+        {MUTATION_TARGET_OPTIONS.map((option) => {
           const Icon = option.icon
           const isActive = option.id === activeMutationTarget
 
