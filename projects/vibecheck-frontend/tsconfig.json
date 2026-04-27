@@ -15,6 +15,7 @@
     "forceConsistentCasingInFileNames": true /* Disallow inconsistently-cased references to the same file. */,
     "allowJs": false,
     "allowSyntheticDefaultImports": true,
+    "ignoreDeprecations": "6.0",
     "moduleResolution": "Node",
     "resolveJsonModule": true,
     "isolatedModules": true,
@@ -28,7 +29,7 @@
     "vite.config.js",
     "src/utils/ellipseAddress.spec.tsx",
     "src/utils/ellipseAddress.spec.tsx",
-    "src/main.tsx",
+    "src/main.tsx"
   ],
   "references": [
     {
