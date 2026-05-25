@@ -9,7 +9,7 @@
     "vibekit-mcp": {
       "type": "local",
       "command": [
-        "C:\\Users\\Jacopo\\.vibekit\\bin\\vibekit.exe",
+        "C:\\Users\\jacop\\.vibekit\\bin\\vibekit.exe",
         "mcp"
       ],
       "environment": {},
